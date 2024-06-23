@@ -142,7 +142,28 @@ public:
         }
         registers[Vx] = uint8_t(result);
     }
+    void Op_8xy5(uint8_t Vx, uint8_t Vy){ // [SUB Vx, Vy] Vx = Vx-Vy, Vf = 1 if Vx>Vy, otheriwse 0
+        if(registers[Vx] >= registers[Vy]){
+            VF = 1;
+        }else{
+            VF=0;
+        }
+        registers[Vx] = (registers[Vx] - registers[Vy]);
+    }
 
+    void Op_8xy6(uint8_t Vx, uint8_t Vy){ // [SHR Vx {, Vy}] Vx = Vx SHR 1y, Vf = least significant bit
+        VF = registers[Vx] & 1;
+        registers[Vx] >>= 1;
+    }
 
+    void Op_8xy7(uint8_t Vx, uint8_t Vy){ // [SUBN Vx, Vy] Vx = Vy - Vx, 
+      if(registers[Vy] >= registers[Vx]){
+            VF = 1;
+        }else{
+            VF=0;
+        }
+        registers[Vx] = (registers[Vy] - registers[Vx]);
+    }
+    
 
 };
