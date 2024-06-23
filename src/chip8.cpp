@@ -220,4 +220,12 @@ public:
         I_reg = I_reg + registers[Vx];
     }
 
+    void Op_Fx29(uint8_t Vx){ // [LD F, Vx] I = location of hex sprite for value of reg Vx 
+    }
+
+    void Op_Fx33(uint8_t Vx){ // [LD B, Vx] I = decimal vlaue of Vx, places hundreds digit in memory at location in I, tens digit at I + 1, ones digit at I + 2 
+        
+    }
+
+
 };
