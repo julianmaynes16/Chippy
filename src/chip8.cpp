@@ -164,6 +164,60 @@ public:
         }
         registers[Vx] = (registers[Vy] - registers[Vx]);
     }
+
+    void Op_8xyE(uint8_t Vx, uint8_t Vy){ // [SHL Vx {, Vy}] Vx = Vx SHL 1, 
+        VF = registers[Vx] & 0x80;
+        registers[Vx] <<= 1;
+    }
+
+    void Op_9xy0(uint8_t Vx, uint8_t Vy){ // [SNE Vx, Vy], IF reg Vx != reg  Vy, increase PC by 2
+        if(registers[Vx] != registers[Vy]){
+            PC += 2;
+        }
+    }
     
+    void Op_Annn(uint16_t nnn){ // [Ld I, addr], set register I to nnnn
+        I_reg = nnn;
+    }
+
+    void Op_Bnnn(uint16_t nnn){ // [JP V0, addr], jump to location nnn + Vo
+        PC = registers[0] + nnn;
+    }
+
+    void Op_Cxkk(uint8_t Vx, uint8_t kk){ // [RND Vx, byte], generates random 8 bit number, AND'd with kk, set ot to Vx
+        registers[Vx] = (rand() % 255) & kk;
+    }
+    //TODO
+    void Op_Dxyn(uint8_t Vx, uint8_t Vy, uint8_t n){ 
+        // [DRW Vx, Vy, nibble], Read n bytes from memory starting at I. 
+        //Bytes are displayed as sprites at coordinates in reg Vx and Vy.
+        //If pixels are erased, Vf is set to 1, otherwise Vf is 0
+        //If displayed outside coordinates, wrap around.
+    }
+
+    void Op_Ex9E(uint8_t Vx){ // [SKP Vx] If key coresponding to value of Vx is currently pressed, PC increases by 2
+    }
+
+    void Op_ExA1(uint8_t Vx){ // [SKNP Vx] If key coresponding to value of Vx is NOT currently pressed, PC increases by 2
+    }
+
+    void Op_Fx07(uint8_t Vx){ // [LD Vx, DT] Value of DT is placed into VX
+        registers[Vx] = delayTimer;
+    }
+
+    void Op_Fx0A(uint8_t Vx){ // [LD Vx, K] All execution stops until a key is pressed, then the value if stored in Vx
+    }
+
+    void Op_Fx15(uint8_t Vx){ // [LD Dt, Vx] Set delay timer = Vx
+        delayTimer = registers[Vx];
+    }
+
+    void Op_Fx18(uint8_t Vx){ // [LD St, Vx] Set sound timer = Vx
+        soundTimer = registers[Vx];
+    }
+    
+    void Op_Fx1E(uint8_t Vx){ // [Add I, Vx] Values of I and Vx, results stored in I
+        I_reg = I_reg + registers[Vx];
+    }
 
 };
