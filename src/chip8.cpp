@@ -12,6 +12,7 @@ public:
     uint16_t I_reg;
     uint8_t delayTimer;
     uint8_t soundTimer;
+    bool VF;
 
     uint16_t PC; // Program Counter, points to currently executing address
     uint8_t SP;  // Stack pointer, points to topmost level of stack
@@ -83,7 +84,7 @@ public:
         PC = nnn;
     }
 
-    void Op_3xkk(char Vx, uint8_t kk)
+    void Op_3xkk(uint8_t Vx, uint8_t kk)
     { // [SE Vx, byte], if reg Vx = kk, increment PC by 2
         if (registers[Vx] == kk)
         {
@@ -91,7 +92,7 @@ public:
         }
     }
 
-    void Op_4xkk(char Vx, uint8_t kk)
+    void Op_4xkk(uint8_t Vx, uint8_t kk)
     { // [SNE Vx, byte] if reg Vx != kk, increment PC by 2
         if (registers[Vx] != kk)
         {
@@ -99,7 +100,7 @@ public:
         }
     }
 
-    void Op_5xy0(char Vx, char Vy)
+    void Op_5xy0(uint8_t Vx, uint8_t Vy)
     { // [SE Vx, Vy] if reg Vx = reg Vy, increment PC by 2
         if (registers[Vx] == registers[Vy])
         {
@@ -107,15 +108,41 @@ public:
         }
     }
 
-    void Op_6xkk(char Vx, uint8_t kk)
+    void Op_6xkk(uint8_t Vx, uint8_t kk)
     { // [LD Vx, byte] Puts value kk into register Vx
         registers[Vx] = kk;
     }
 
-    void Op_7xkk(char Vx, uint8_t kk)
+    void Op_7xkk(uint8_t Vx, uint8_t kk)
     { // ADD [Vx, byte] Add kk to value in reg Vx, store result in Vx
         uint8_t result = registers[Vx] + kk;
         registers[Vx] = result;
     }
+
+    void Op_8xy0(uint8_t Vx, uint8_t Vy){ // [LD Vx Vy] Stores value of reg Vy into Vx
+        registers[Vx] = registers[Vy];
+    }
+
+    void Op_8xy1(uint8_t Vx, uint8_t Vy){ // [Vx OR Vy] Bitwise OR on Vx and Vy, stores result in Vx 
+        registers[Vx] = (registers[Vx] | registers[Vy]);
+    }
+
+    void Op_8xy2(uint8_t Vx, uint8_t Vy){ // [Vx AND Vy] Bitwise AND on Vx and Vy, stores result in Vx 
+        registers[Vx] = (registers[Vx] & registers[Vy]);
+    }
+
+    void Op_8xy3(uint8_t  Vx, uint8_t Vy){ // [Vx XOR Vy] Bitwise XOR on Vx and Vy, stores result in Vx 
+        registers[Vx] = (registers[Vx] ^ registers[Vy]);
+    }
+
+    void Op_8xy4(uint8_t Vx, uint8_t Vy){ // [ADD Vx, Vy] Vx = Vx+Vy, Vf = carry
+        uint16_t result = (registers[Vx] + registers[Vy]);
+        if (result > 255){
+            VF = 1;
+        }
+        registers[Vx] = uint8_t(result);
+    }
+
+
 
 };
