@@ -26,6 +26,10 @@ Chip8::Chip8(){
     delayTimer = 0;
     soundTimer = 0;
 
+    //set screen to blank
+    for(int i = 0; i < 2048; i++){
+        screen[i] = 0; 
+    }
 
 
     //make all memory default 0

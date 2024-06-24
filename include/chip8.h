@@ -150,6 +150,8 @@ public:
         uint8_t SP;  // Stack pointer, points to topmost level of stack
         // stack
         uint16_t stack[16];
+        //screen, 64 x 32
+        uint8_t screen[2048];
 
         const uint8_t sprite_0[5] = {0xF0, 0x90, 0x90, 0x90, 0xF0};
         const uint8_t sprite_1[5] = {0x20, 0x60, 0x20, 0x20, 0x70};
