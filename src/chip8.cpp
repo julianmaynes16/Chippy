@@ -3,19 +3,18 @@
 #include <iostream>
 #include <SDL2/SDL.h>
 #include <string>
+#include <fstream>
+#include <filesystem>
 
 
 
 Chip8::Chip8(std::string file_name){
-    
-}
-
-
-
-void Chip8::initializeMemory()
-{ // populates designated memory spaces
-    for (int i = 0; i < 5; i++)
-    {
+    //make all memory default 0
+    for(int i = 0; i < 4096; i++){
+        memory[i] = 0;
+    }
+    //Load default spritesheet
+    for (int i = 0; i < 5; i++){
         memory[i + 80] = sprite_0[i];
         memory[i + 85] = sprite_1[i];
         memory[i + 90] = sprite_2[i];
@@ -32,6 +31,43 @@ void Chip8::initializeMemory()
         memory[i + 145] = sprite_D[i];
         memory[i + 150] = sprite_E[i];
         memory[i + 155] = sprite_F[i];
+    }
+
+    //Load ROM
+    for(auto const& directory_entry : std::filesystem::directory_iterator("../rom/")){
+        if(directory_entry.path().extension() == ".ch8"){
+           std::ifstream ich8(directory_entry.path());
+           if(ich8.fail()){
+            std::cout <<"Couldn't open file" << std::endl;
+           }else{
+                std::cout << "Successfully opened file" << std::endl;
+                std::cout << "Loading ROM..." << std::endl;
+                for(int i = 1536; i < 4096; i++){
+                    uint8_t hex_byte;
+                    ich8 >> std::hex >> hex_byte;
+                    if(ich8.fail()){
+                        std::cout << "Error occured while reading ROM" << std::endl;
+                    }
+                    memory[i] = hex_byte;
+                }
+                std::cout << "ROM read successful" << std::endl;
+                ich8.close();
+                break;
+           } 
+        }
+    }
+    std::cout << "Couldn't find ROM. Make sure the file is in the rom folder and has the .ch8 extension" << std::endl;
+}
+
+
+
+void Chip8::debug_printMemory()
+{ // populates designated memory spaces
+    for(int i = 0; i < 4096; i++){
+        if((i % 16) == 0){
+            std::cout << "" << std::endl;
+        }
+        std::cout << std::hex << memory[i] << " ";
     }
 }
 
@@ -197,7 +233,7 @@ void Chip8::Op_Fx18(uint8_t Vx){ // [LD St, Vx] Set sound timer = Vx
 }
 
 void Chip8::Op_Fx1E(uint8_t Vx){ // [Add I, Vx] Values of I and Vx, results stored in I
-    I_reg = I_reg + registers[Vx];
+    I_reg += registers[Vx];
 }
 
 void Chip8::Op_Fx29(uint8_t Vx){ // [LD F, Vx] I = location of hex sprite for value of reg Vx 

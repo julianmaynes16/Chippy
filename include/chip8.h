@@ -8,7 +8,7 @@ public:
 
     Chip8(std::string file_name);
     
-    void initializeMemory();
+    void debug_printMemory();
 
     // assembly functions, xy = each 4bit hex val, nnn = addr/address, n = nibble/lowest 4 bit of instruction, kk = byte/8 bit
     void Op_00E0();
