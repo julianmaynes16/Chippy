@@ -1,3 +1,4 @@
+#pragma once
 #include <cstdint>
 #include <iostream>
 #include <SDL2/SDL.h>
@@ -6,9 +7,13 @@ class Chip8
 {
 public:
 
-    Chip8(std::string file_name);
+    Chip8();
     
     void debug_printMemory();
+
+    void debug_printRegisters();
+
+    void execute();
 
     // assembly functions, xy = each 4bit hex val, nnn = addr/address, n = nibble/lowest 4 bit of instruction, kk = byte/8 bit
     void Op_00E0();
@@ -143,8 +148,6 @@ public:
         uint8_t SP;  // Stack pointer, points to topmost level of stack
         // stack
         uint16_t stack[16];
-
-        std::string file;
 
         const uint8_t sprite_0[5] = {0xF0, 0x90, 0x90, 0x90, 0xF0};
         const uint8_t sprite_1[5] = {0x20, 0x60, 0x20, 0x20, 0x70};

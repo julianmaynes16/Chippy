@@ -1,4 +1,5 @@
 #include <SDL2/SDL.h>
+#include <chip8.h>
 #include <stdio.h>
 #include <iostream>
 
@@ -7,6 +8,7 @@ const int SCREEN_HEIGHT = 32;
 
 int main(int argc, char *argv[])
 {
+    /*
    SDL_Window * window = nullptr;
 
     SDL_Surface * screenSurface = nullptr;
@@ -28,5 +30,11 @@ int main(int argc, char *argv[])
 
     SDL_DestroyWindow(window);
     SDL_Quit();
+    */
+
+    Chip8 chip8;
+    chip8.debug_printRegisters();
+    chip8.execute();
+    chip8.debug_printRegisters();
     return 0;
 }

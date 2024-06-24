@@ -8,7 +8,7 @@
 
 
 
-Chip8::Chip8(std::string file_name){
+Chip8::Chip8(){
     //make all memory default 0
     for(int i = 0; i < 4096; i++){
         memory[i] = 0;
@@ -34,29 +34,32 @@ Chip8::Chip8(std::string file_name){
     }
 
     //Load ROM
-    for(auto const& directory_entry : std::filesystem::directory_iterator("../rom/")){
+    for(auto const& directory_entry : std::filesystem::directory_iterator("rom/")){
         if(directory_entry.path().extension() == ".ch8"){
-           std::ifstream ich8(directory_entry.path());
-           if(ich8.fail()){
-            std::cout <<"Couldn't open file" << std::endl;
-           }else{
+           std::ifstream ich8(directory_entry.path(), std::ios::binary);
+           if(!ich8.fail()){
                 std::cout << "Successfully opened file" << std::endl;
                 std::cout << "Loading ROM..." << std::endl;
-                for(int i = 1536; i < 4096; i++){
-                    uint8_t hex_byte;
-                    ich8 >> std::hex >> hex_byte;
+                int i = 1536;
+                ich8 >> std::noskipws;
+                uint8_t hex_byte;
+                while(ich8 >> hex_byte){
                     if(ich8.fail()){
                         std::cout << "Error occured while reading ROM" << std::endl;
+                        //break;
                     }
-                    memory[i] = hex_byte;
+                    memory[i++] = hex_byte;
                 }
                 std::cout << "ROM read successful" << std::endl;
                 ich8.close();
                 break;
+           }else{
+                std::cout <<"Couldn't open file" << std::endl;
+                break;
            } 
         }
     }
-    std::cout << "Couldn't find ROM. Make sure the file is in the rom folder and has the .ch8 extension" << std::endl;
+    //std::cout << "Couldn't find ROM. Make sure the file is in the rom folder and has the .ch8 extension" << std::endl;
 }
 
 
@@ -67,12 +70,146 @@ void Chip8::debug_printMemory()
         if((i % 16) == 0){
             std::cout << "" << std::endl;
         }
-        std::cout << std::hex << memory[i] << " ";
+        std::cout << std::setw(2) << std::setfill('0') << std::hex << int(memory[i]) << " ";
     }
 }
 
-
-
+void Chip8::debug_printRegisters()
+{ // populates designated memory spaces
+    for(int i = 0; i < 16; i++){
+        std::cout << std::setw(2) << std::setfill('0') << std::hex << int(registers[i]) << " ";
+    }
+    std::cout << std::endl;
+}
+/**
+ * @brief Executes Code from address 0x200 (512) to 0xFFF (4095)
+ */
+void Chip8::execute(){
+    //start with the first bytes
+     uint16_t i = 512;
+     for(int i = 512; i < 4096; i+=2){
+        //returns full 4 hex digit instruction
+        uint16_t instr = (memory[i] << 4) | memory[i+1];
+        uint8_t x = (instr & 0x0F00) >> 8;
+        uint8_t y = (instr & 0x00F0) >> 4;
+        uint8_t kk = instr & 0x00FF;
+        uint8_t lsb =  instr & 0x000F;
+        uint8_t bottom_2 = instr & 0x00FF;
+        uint8_t n = instr & 0x000F;
+        uint16_t addr = instr & 0x0FFF;
+        switch(memory[i] >> 4){ // MSB
+            case 0x00:
+                if(instr == 0x00E0){
+                    Op_00E0();
+                }else{
+                    Op_00EE();
+                }
+                break;
+            case 0x01:
+                Op_1nnn(addr);
+                break;
+            case 0x02:
+                Op_2nnn(addr);
+                break;
+            case 0x03:
+                Op_3xkk(x, kk);
+                break;
+            case 0x04:
+                Op_4xkk(x, kk);
+                break;
+            case 0x05:
+                Op_5xy0(x,y);
+                break;
+            case 0x06:
+                Op_6xkk(x, kk);
+                break;
+            case 0x07:
+                Op_7xkk(x, kk);
+                break;
+            case 0x08: // 8 possibilities
+                switch(lsb){
+                    case 1:
+                        Op_8xy1(x,y);
+                        break;
+                    case 2:
+                        Op_8xy2(x,y);
+                        break;
+                    case 3:
+                        Op_8xy3(x,y);
+                        break;
+                    case 4:
+                        Op_8xy4(x,y);
+                        break;
+                    case 5:
+                        Op_8xy5(x,y);
+                        break;
+                    case 6:
+                        Op_8xy6(x,y);
+                        break;
+                    case 7:
+                        Op_8xy7(x,y);
+                        break;
+                    case 8:
+                        Op_8xyE(x,y);
+                        break;
+                }
+                break;
+            case 0x09:
+                Op_9xy0(x,y);
+                break;
+            case 0x0A:
+                Op_Annn(addr);
+                break;
+            case 0x0B:
+                Op_Bnnn(addr);
+                break;
+            case 0x0C:
+                Op_Cxkk(x, kk);
+                break;
+            case 0x0D:
+                Op_Dxyn(x,y,n);
+                break;
+            case 0x0E:
+                if((instr & 0x00FF) == 0x9E){
+                    Op_Ex9E(x);
+                }else{
+                    Op_ExA1(x);
+                }
+                break;
+            case 0x0F:
+                switch(bottom_2){
+                    case 0x07:
+                        Op_Fx07(x);
+                        break;
+                    case 0x0A:
+                        Op_Fx0A(x);
+                        break;
+                    case 0x15:
+                        Op_Fx15(x);
+                        break;
+                    case 0x18:
+                        Op_Fx18(x);
+                        break;
+                    case 0x1E:
+                        Op_Fx1E(x);
+                        break;
+                    case 0x29:
+                        Op_Fx29(x);
+                        break;
+                    case 0x33:
+                        Op_Fx33(x);
+                        break;
+                    case 0x55:
+                        Op_Fx55(x);
+                        break;
+                    case 0x65:
+                        Op_Fx65(x);
+                        break;
+                }
+                break;
+        }
+     }
+}
 // assembly functions, xy = each 4bit hex val, nnn = addr/address, n = nibble/lowest 4 bit of instruction, kk = byte/8 bit
 void Chip8::Op_00E0()
 { // CLR, Clear display
