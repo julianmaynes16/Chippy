@@ -9,6 +9,25 @@
 
 
 Chip8::Chip8(){
+    //Set default PC
+    PC = 0x600;
+    //Set registers to default 0
+    for(int i = 0; i < 16; i++){
+        registers[i] = 0;
+    }
+    //stack initialization
+    SP = 0;
+    for(int i = 0; i < 16;i++){
+        stack[i] = 0;
+    }
+
+    //Other inits
+    I_reg = 0;
+    delayTimer = 0;
+    soundTimer = 0;
+
+
+
     //make all memory default 0
     for(int i = 0; i < 4096; i++){
         memory[i] = 0;
@@ -81,23 +100,27 @@ void Chip8::debug_printRegisters()
     }
     std::cout << std::endl;
 }
+
+void Chip8::incrementPC(){
+    //Moves to next 4 hex digits
+    PC+=2;
+}
 /**
  * @brief Executes Code from address 0x200 (512) to 0xFFF (4095)
  */
 void Chip8::execute(){
     //start with the first bytes
-     uint16_t i = 512;
-     for(int i = 512; i < 4096; i+=2){
+     while(PC < 4096){ // make i the program counter
         //returns full 4 hex digit instruction
-        uint16_t instr = (memory[i] << 4) | memory[i+1];
+        uint16_t instr = (memory[PC] << 4) | memory[PC+1];
         uint8_t x = (instr & 0x0F00) >> 8;
         uint8_t y = (instr & 0x00F0) >> 4;
         uint8_t kk = instr & 0x00FF;
-        uint8_t lsb =  instr & 0x000F;
+        uint8_t lsb =  instr & 0x000F;  
         uint8_t bottom_2 = instr & 0x00FF;
         uint8_t n = instr & 0x000F;
         uint16_t addr = instr & 0x0FFF;
-        switch(memory[i] >> 4){ // MSB
+        switch(memory[PC] >> 4){ // MSB
             case 0x00:
                 if(instr == 0x00E0){
                     Op_00E0();
@@ -214,6 +237,7 @@ void Chip8::execute(){
 void Chip8::Op_00E0()
 { // CLR, Clear display
     std::cout << "Hi";
+    incrementPC();
 }
 
 void Chip8::Op_00EE()
@@ -239,51 +263,60 @@ void Chip8::Op_3xkk(uint8_t Vx, uint8_t kk)
 { // [SE Vx, byte], if reg Vx = kk, increment PC by 2
     if (registers[Vx] == kk)
     {
-        PC += 2;
+        incrementPC();
     }
+    incrementPC();
 }
 
 void Chip8::Op_4xkk(uint8_t Vx, uint8_t kk)
 { // [SNE Vx, byte] if reg Vx != kk, increment PC by 2
     if (registers[Vx] != kk)
     {
-        PC += 2;
+        incrementPC();
     }
+    incrementPC();
 }
 
 void Chip8::Op_5xy0(uint8_t Vx, uint8_t Vy)
 { // [SE Vx, Vy] if reg Vx = reg Vy, increment PC by 2
     if (registers[Vx] == registers[Vy])
     {
-        PC += 2;
+        incrementPC();
     }
+    incrementPC();
 }
 
 void Chip8::Op_6xkk(uint8_t Vx, uint8_t kk)
 { // [LD Vx, byte] Puts value kk into register Vx
     registers[Vx] = kk;
+    incrementPC();
 }
 
 void Chip8::Op_7xkk(uint8_t Vx, uint8_t kk)
 { // ADD [Vx, byte] Add kk to value in reg Vx, store result in Vx
     uint8_t result = registers[Vx] + kk;
     registers[Vx] = result;
+    incrementPC();
 }
 
 void Chip8::Op_8xy0(uint8_t Vx, uint8_t Vy){ // [LD Vx Vy] Stores value of reg Vy into Vx
     registers[Vx] = registers[Vy];
+    incrementPC();
 }
 
 void Chip8::Op_8xy1(uint8_t Vx, uint8_t Vy){ // [Vx OR Vy] Bitwise OR on Vx and Vy, stores result in Vx 
     registers[Vx] = (registers[Vx] | registers[Vy]);
+    incrementPC();
 }
 
 void Chip8::Op_8xy2(uint8_t Vx, uint8_t Vy){ // [Vx AND Vy] Bitwise AND on Vx and Vy, stores result in Vx 
     registers[Vx] = (registers[Vx] & registers[Vy]);
+    incrementPC();
 }
 
 void Chip8::Op_8xy3(uint8_t  Vx, uint8_t Vy){ // [Vx XOR Vy] Bitwise XOR on Vx and Vy, stores result in Vx 
     registers[Vx] = (registers[Vx] ^ registers[Vy]);
+    incrementPC();
 }
 
 void Chip8::Op_8xy4(uint8_t Vx, uint8_t Vy){ // [ADD Vx, Vy] Vx = Vx+Vy, Vf = carry
@@ -294,6 +327,7 @@ void Chip8::Op_8xy4(uint8_t Vx, uint8_t Vy){ // [ADD Vx, Vy] Vx = Vx+Vy, Vf = ca
         VF = 0;
     }
     registers[Vx] = uint8_t(result);
+    incrementPC();
 }
 void Chip8::Op_8xy5(uint8_t Vx, uint8_t Vy){ // [SUB Vx, Vy] Vx = Vx-Vy, Vf = 1 if Vx>Vy, otheriwse 0
     if(registers[Vx] >= registers[Vy]){
@@ -302,11 +336,13 @@ void Chip8::Op_8xy5(uint8_t Vx, uint8_t Vy){ // [SUB Vx, Vy] Vx = Vx-Vy, Vf = 1 
         VF=0;
     }
     registers[Vx] = (registers[Vx] - registers[Vy]);
+    incrementPC();
 }
 
 void Chip8::Op_8xy6(uint8_t Vx, uint8_t Vy){ // [SHR Vx {, Vy}] Vx = Vx SHR 1y, Vf = least significant bit
     VF = registers[Vx] & 1;
     registers[Vx] >>= 1;
+    incrementPC();
 }
 
 void Chip8::Op_8xy7(uint8_t Vx, uint8_t Vy){ // [SUBN Vx, Vy] Vx = Vy - Vx, 
@@ -316,21 +352,25 @@ void Chip8::Op_8xy7(uint8_t Vx, uint8_t Vy){ // [SUBN Vx, Vy] Vx = Vy - Vx,
         VF=0;
     }
     registers[Vx] = (registers[Vy] - registers[Vx]);
+    incrementPC();
 }
 
 void Chip8::Op_8xyE(uint8_t Vx, uint8_t Vy){ // [SHL Vx {, Vy}] Vx = Vx SHL 1, 
     VF = registers[Vx] & 0x80;
     registers[Vx] <<= 1;
+    incrementPC();
 }
 
 void Chip8::Op_9xy0(uint8_t Vx, uint8_t Vy){ // [SNE Vx, Vy], IF reg Vx != reg  Vy, increase PC by 2
     if(registers[Vx] != registers[Vy]){
-        PC += 2;
+        incrementPC();
     }
+    incrementPC();
 }
 
 void Chip8::Op_Annn(uint16_t nnn){ // [Ld I, addr], set register I to nnnn
     I_reg = nnn;
+    incrementPC();
 }
 
 void Chip8::Op_Bnnn(uint16_t nnn){ // [JP V0, addr], jump to location nnn + Vo
@@ -339,6 +379,7 @@ void Chip8::Op_Bnnn(uint16_t nnn){ // [JP V0, addr], jump to location nnn + Vo
 
 void Chip8::Op_Cxkk(uint8_t Vx, uint8_t kk){ // [RND Vx, byte], generates random 8 bit number, AND'd with kk, set ot to Vx
     registers[Vx] = (rand() % 255) & kk;
+    incrementPC();
 }
 //TODO
 void Chip8::Op_Dxyn(uint8_t Vx, uint8_t Vy, uint8_t n){ 
@@ -346,34 +387,47 @@ void Chip8::Op_Dxyn(uint8_t Vx, uint8_t Vy, uint8_t n){
     //Bytes are displayed as sprites at coordinates in reg Vx and Vy.
     //If pixels are erased, Vf is set to 1, otherwise Vf is 0
     //If displayed outside coordinates, wrap around.
+    uint8_t x = registers[Vx] % 64;
+    uint8_t y = registers[Vx] % 32;
+    y = 
+    VF = 0;
+    incrementPC();
 }
 
 void Chip8::Op_Ex9E(uint8_t Vx){ // [SKP Vx] If key coresponding to value of Vx is currently pressed, PC increases by 2
+    incrementPC();
 }
 
 void Chip8::Op_ExA1(uint8_t Vx){ // [SKNP Vx] If key coresponding to value of Vx is NOT currently pressed, PC increases by 2
+    incrementPC();
 }
 
 void Chip8::Op_Fx07(uint8_t Vx){ // [LD Vx, DT] Value of DT is placed into VX
     registers[Vx] = delayTimer;
+    incrementPC();
 }
 
 void Chip8::Op_Fx0A(uint8_t Vx){ // [LD Vx, K] All execution stops until a key is pressed, then the value if stored in Vx
+    incrementPC();
 }
 
 void Chip8::Op_Fx15(uint8_t Vx){ // [LD Dt, Vx] Set delay timer = Vx
     delayTimer = registers[Vx];
+    incrementPC();
 }
 
 void Chip8::Op_Fx18(uint8_t Vx){ // [LD St, Vx] Set sound timer = Vx
     soundTimer = registers[Vx];
+    incrementPC();
 }
 
 void Chip8::Op_Fx1E(uint8_t Vx){ // [Add I, Vx] Values of I and Vx, results stored in I
     I_reg += registers[Vx];
+    incrementPC();
 }
 
 void Chip8::Op_Fx29(uint8_t Vx){ // [LD F, Vx] I = location of hex sprite for value of reg Vx 
+    incrementPC();
 }
 
 void Chip8::Op_Fx33(uint8_t Vx){ // [LD B, Vx] I = decimal vlaue of Vx, places hundreds digit in memory at location in I, tens digit at I + 1, ones digit at I + 2 
@@ -384,16 +438,19 @@ void Chip8::Op_Fx33(uint8_t Vx){ // [LD B, Vx] I = decimal vlaue of Vx, places h
     memory[I_reg] = hundreds_digit;
     memory[I_reg + 1] = tens_digit;
     memory[I_reg + 2] = ones_digit; 
+    incrementPC();
 }
 
 void Chip8::Op_Fx55(uint8_t Vx){ // [LD [I], Vx] Copies values of registers V0 through Vx into memory starting at address I
     for(int i = 0; i <= Vx; i++){
         memory[I_reg + i] = registers[i];
     }
+    incrementPC();
 }
 
 void Chip8::Op_Fx65(uint8_t Vx){ // [LD Vx, [I]] Puts values from memory starting at location In into registers V0 through Vx
     for(int i = 0; i <= Vx; i++){
         registers[i] = memory[I_reg + i];
     }
+    incrementPC();
 }
