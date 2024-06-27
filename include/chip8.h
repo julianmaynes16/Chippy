@@ -144,14 +144,13 @@ public:
         uint16_t I_reg;
         uint8_t delayTimer;
         uint8_t soundTimer;
-        bool VF;
 
         uint16_t PC; // Program Counter, points to currently executing address
         uint8_t SP;  // Stack pointer, points to topmost level of stack
         // stack
         uint16_t stack[16];
-        //screen, 64 x 32
-        uint8_t screen[2048];
+        //screen, 64 x 32 pixels, 8 bytes x 4 bytes 
+        uint8_t screen[64*32]; //each pixel is either 0xFF (on)or 0x00(off)  
 
         const uint8_t sprite_0[5] = {0xF0, 0x90, 0x90, 0x90, 0xF0};
         const uint8_t sprite_1[5] = {0x20, 0x60, 0x20, 0x20, 0x70};

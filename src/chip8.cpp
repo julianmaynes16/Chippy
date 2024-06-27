@@ -27,7 +27,7 @@ Chip8::Chip8(){
     soundTimer = 0;
 
     //set screen to blank
-    for(int i = 0; i < 2048; i++){
+    for(int i = 0; i < 256; i++){
         screen[i] = 0; 
     }
 
@@ -326,41 +326,41 @@ void Chip8::Op_8xy3(uint8_t  Vx, uint8_t Vy){ // [Vx XOR Vy] Bitwise XOR on Vx a
 void Chip8::Op_8xy4(uint8_t Vx, uint8_t Vy){ // [ADD Vx, Vy] Vx = Vx+Vy, Vf = carry
     uint16_t result = (registers[Vx] + registers[Vy]);
     if (result > 255){
-        VF = 1;
+        registers[0x0F] = 1;
     }else{
-        VF = 0;
+        registers[0x0F] = 0;
     }
     registers[Vx] = uint8_t(result);
     incrementPC();
 }
 void Chip8::Op_8xy5(uint8_t Vx, uint8_t Vy){ // [SUB Vx, Vy] Vx = Vx-Vy, Vf = 1 if Vx>Vy, otheriwse 0
     if(registers[Vx] >= registers[Vy]){
-        VF = 1;
+        registers[0x0F] = 1;
     }else{
-        VF=0;
+        registers[0x0F] = 0;
     }
     registers[Vx] = (registers[Vx] - registers[Vy]);
     incrementPC();
 }
 
 void Chip8::Op_8xy6(uint8_t Vx, uint8_t Vy){ // [SHR Vx {, Vy}] Vx = Vx SHR 1y, Vf = least significant bit
-    VF = registers[Vx] & 1;
+    registers[0x0F] = registers[Vx] & 1;
     registers[Vx] >>= 1;
     incrementPC();
 }
 
 void Chip8::Op_8xy7(uint8_t Vx, uint8_t Vy){ // [SUBN Vx, Vy] Vx = Vy - Vx, 
     if(registers[Vy] >= registers[Vx]){
-        VF = 1;
+        registers[0x0F] = 1;
     }else{
-        VF=0;
+        registers[0x0F] = 0;
     }
     registers[Vx] = (registers[Vy] - registers[Vx]);
     incrementPC();
 }
 
 void Chip8::Op_8xyE(uint8_t Vx, uint8_t Vy){ // [SHL Vx {, Vy}] Vx = Vx SHL 1, 
-    VF = registers[Vx] & 0x80;
+    registers[0x0F] = registers[Vx] & 0x80;
     registers[Vx] <<= 1;
     incrementPC();
 }
@@ -382,7 +382,7 @@ void Chip8::Op_Bnnn(uint16_t nnn){ // [JP V0, addr], jump to location nnn + Vo
 }
 
 void Chip8::Op_Cxkk(uint8_t Vx, uint8_t kk){ // [RND Vx, byte], generates random 8 bit number, AND'd with kk, set ot to Vx
-    registers[Vx] = (rand() % 255) & kk;
+    registers[Vx] = (rand() % 256) & kk;
     incrementPC();
 }
 //TODO
@@ -392,9 +392,18 @@ void Chip8::Op_Dxyn(uint8_t Vx, uint8_t Vy, uint8_t n){
     //If pixels are erased, Vf is set to 1, otherwise Vf is 0
     //If displayed outside coordinates, wrap around.
     uint8_t x = registers[Vx] % 64;
-    uint8_t y = registers[Vx] % 32;
-    y = 
-    VF = 0;
+    uint8_t y = registers[Vy] % 32;
+    registers[0x0F] = 0;
+    //starts at location I, reads n bytes
+    for(int r = 0; r < n; r++){ // rows, 0xFF 0x23 0x82 0x48 
+        uint8_t sprite_data = memory[I_reg + r]; 
+        for(int b = 0; b < 8; b++){ //bit 
+            if(((x + b) < 64) && ((y + r) < 32)){ // bounds check
+                
+            }
+            
+        }
+    }
     incrementPC();
 }
 
