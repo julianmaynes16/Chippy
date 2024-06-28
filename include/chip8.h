@@ -14,9 +14,9 @@ public:
 
     void debug_printRegisters();
 
-    void Chip8::debug_printScreen();
+    void debug_printScreen();
 
-    void Chip8::incrementPC();
+    void incrementPC();
 
     void execute();
 
