@@ -105,6 +105,15 @@ void Chip8::debug_printRegisters()
     std::cout << std::endl;
 }
 
+void Chip8::debug_printScreen(){
+    for(int i = 0; i < 2048 ; i++){
+        if((i % 65) == 0){
+            std::cout << "" << std::endl;
+        }
+        std::cout << screen[i] << " ";
+    }
+}
+
 void Chip8::incrementPC(){
     //Moves to next 4 hex digits
     PC+=2;
