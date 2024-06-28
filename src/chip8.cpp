@@ -110,7 +110,7 @@ void Chip8::debug_printScreen(){
         if((i % 65) == 0){
             std::cout << "" << std::endl;
         }
-        std::cout << screen[i] << " ";
+        std::cout <<  std::setw(2) << std::setfill('0') << std::hex << int(screen[i]) << " ";
     }
 }
 
