@@ -391,17 +391,37 @@ void Chip8::Op_Dxyn(uint8_t Vx, uint8_t Vy, uint8_t n){
     //Bytes are displayed as sprites at coordinates in reg Vx and Vy.
     //If pixels are erased, Vf is set to 1, otherwise Vf is 0
     //If displayed outside coordinates, wrap around.
+    //Pixel in list equation; list_loc = (y * screen_width) + x
     uint8_t x = registers[Vx] % 64;
     uint8_t y = registers[Vy] % 32;
     registers[0x0F] = 0;
     //starts at location I, reads n bytes
-    for(int r = 0; r < n; r++){ // rows, 0xFF 0x23 0x82 0x48 
-        uint8_t sprite_data = memory[I_reg + r]; 
-        for(int b = 0; b < 8; b++){ //bit 
+    for(int r = 0; r < n; r++){ // rows, 0xFF 0x23 0x82 0x48 0x34 0x67 0x55 0x65 
+        uint8_t sprite_hex = memory[I_reg + r];  //0x65, 8 wide, 0110_0101
+        for(int b = 7; b > 0; b--){ // bit
             if(((x + b) < 64) && ((y + r) < 32)){ // bounds check
-                
+                int list_pos = ((y + r) * 64) + (x+b);
+                uint8_t input_bit;
+                //screen[list_pos] = sprite_hex ^ // will either be 0x00 or 0xFF
+                //cases where xor will erase pixel, ie turn from 1 to 0
+                if((sprite_hex & (1 << b)) != 0){
+                    input_bit = 0xFF;
+                }else{
+                    input_bit = 0;
+                }
+                if((input_bit == 0xFF) && (screen[list_pos] == 0xFF)){
+                    registers[0x0F] = 1;
+                }else{
+                    registers[0x0F] = 0;
+                }
+                screen[list_pos] ^= input_bit;
+                //ex input  = 0110 0101 & 1000_0000
+                //ex screen = 1010_1111
+                //0 0 | 0
+                //0 1 | 1
+                //1 0 | 1
+                //1 1 | 0
             }
-            
         }
     }
     incrementPC();

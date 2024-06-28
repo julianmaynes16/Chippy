@@ -3,6 +3,7 @@
 #include <iostream>
 #include <SDL2/SDL.h>
 #include <string>
+
 class Chip8
 {
 public:
@@ -137,6 +138,7 @@ public:
      
 
     private:
+
         // memory
         uint8_t memory[4096]; // 4KB memory
         // registers
