@@ -123,6 +123,29 @@ void Chip8::incrementPC(){
     //Moves to next 4 hex digits
     PC+=2;
 }
+
+void Chip8::sdlInit(){
+      SDL_Window * window = nullptr;
+
+    SDL_Surface * screenSurface = nullptr;
+
+    SDL_Init(SDL_INIT_VIDEO);
+
+    window = SDL_CreateWindow("Chippy", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 64, 32, SDL_WINDOW_SHOWN);
+
+    screenSurface = SDL_GetWindowSurface(window);
+
+    SDL_Renderer *render = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+    SDL_RenderSetLogicalSize(render, 64, 32);
+
+    SDL_UpdateWindowSurface(window);
+
+    //Hack to get window to stay up
+    SDL_Event e; bool quit = false; while( quit == false ){ while( SDL_PollEvent( &e ) ){ if( e.type == SDL_QUIT ) quit = true; } }
+
+    SDL_DestroyWindow(window);
+    SDL_Quit();
+}
 /**
  * @brief Executes Code from address 0x200 (512) to 0xFFF (4095)
  */
@@ -140,7 +163,6 @@ void Chip8::execute(){
         uint8_t bottom_2 = instr & 0x00FF;
         uint8_t n = instr & 0x000F;
         uint16_t addr = instr & 0x0FFF;
-        debug_printInstruction(instr);
         switch(memory[PC] >> 4){ // MSB
             case 0x00:
                 if(instr == 0x00E0){
@@ -172,6 +194,9 @@ void Chip8::execute(){
                 break;
             case 0x08: // 8 possibilities
                 switch(lsb){
+                    case 0:
+                        Op_8xy0(x,y);
+                        break;
                     case 1:
                         Op_8xy1(x,y);
                         break;
@@ -193,7 +218,7 @@ void Chip8::execute(){
                     case 7:
                         Op_8xy7(x,y);
                         break;
-                    case 8:
+                    case 0x0E:
                         Op_8xyE(x,y);
                         break;
                 }
@@ -252,7 +277,6 @@ void Chip8::execute(){
                 }
                 break;
         }
-        //debug_printScreen();
     }
 }
 // assembly functions, xy = each 4bit hex val, nnn = addr/address, n = nibble/lowest 4 bit of instruction, kk = byte/8 bit
@@ -274,7 +298,13 @@ void Chip8::Op_00EE()
 
 void Chip8::Op_1nnn(uint16_t nnn)
 { // [JP address] Jump, set program countert to nnn
+    if(PC == nnn){//terminating command
+        std::cout << "Exiting..." << std::endl;
+        debug_printScreen();
+        std::exit(EXIT_SUCCESS);
+    } else{
     PC = nnn;
+    }
 }
 
 void Chip8::Op_2nnn(uint16_t nnn)
@@ -420,7 +450,7 @@ void Chip8::Op_Dxyn(uint8_t Vx, uint8_t Vy, uint8_t n){
         uint8_t sprite_hex = memory[I_reg + r];  //0x65, 8 wide, 0110_0101
         for(int b = 7; b > 0; b--){ // bit
             if(((x + b) < 64) && ((y + r) < 32)){ // bounds check
-                int list_pos = ((y + r) * 64) + (x+b);
+                int list_pos = ((y + r) * 64) + (x+(7-b));
                 uint8_t input_bit;
                 //screen[list_pos] = sprite_hex ^ // will either be 0x00 or 0xFF
                 //cases where xor will erase pixel, ie turn from 1 to 0
@@ -431,8 +461,6 @@ void Chip8::Op_Dxyn(uint8_t Vx, uint8_t Vy, uint8_t n){
                 }
                 if((input_bit == 0xFF) && (screen[list_pos] == 0xFF)){
                     registers[0x0F] = 1;
-                }else{
-                    registers[0x0F] = 0;
                 }
                 screen[list_pos] ^= input_bit;
                 //ex input  = 0110 0101 & 1000_0000
@@ -445,7 +473,6 @@ void Chip8::Op_Dxyn(uint8_t Vx, uint8_t Vy, uint8_t n){
         }
     }
     incrementPC();
-    debug_printScreen();
 }
 
 void Chip8::Op_Ex9E(uint8_t Vx){ // [SKP Vx] If key coresponding to value of Vx is currently pressed, PC increases by 2
