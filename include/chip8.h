@@ -16,6 +16,8 @@ public:
 
     void debug_printScreen();
 
+    void debug_printInstruction(uint16_t instr);
+
     void incrementPC();
 
     void execute();

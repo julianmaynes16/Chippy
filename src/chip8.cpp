@@ -10,7 +10,7 @@
 
 Chip8::Chip8(){
     //Set default PC
-    PC = 0x600;
+    PC = 0x200;
     //Set registers to default 0
     for(int i = 0; i < 16; i++){
         registers[i] = 0;
@@ -27,7 +27,7 @@ Chip8::Chip8(){
     soundTimer = 0;
 
     //set screen to blank
-    for(int i = 0; i < 256; i++){
+    for(int i = 0; i < 2048; i++){
         screen[i] = 0; 
     }
 
@@ -63,7 +63,7 @@ Chip8::Chip8(){
            if(!ich8.fail()){
                 std::cout << "Successfully opened file" << std::endl;
                 std::cout << "Loading ROM..." << std::endl;
-                int i = 1536;
+                int i = 512;
                 ich8 >> std::noskipws;
                 uint8_t hex_byte;
                 while(ich8 >> hex_byte){
@@ -92,6 +92,7 @@ void Chip8::debug_printMemory()
     for(int i = 0; i < 4096; i++){
         if((i % 16) == 0){
             std::cout << "" << std::endl;
+            std::cout << i << ": ";
         }
         std::cout << std::setw(2) << std::setfill('0') << std::hex << int(memory[i]) << " ";
     }
@@ -107,11 +108,15 @@ void Chip8::debug_printRegisters()
 
 void Chip8::debug_printScreen(){
     for(int i = 0; i < 2048 ; i++){
-        if((i % 65) == 0){
+        if((i % 64) == 0){
             std::cout << "" << std::endl;
         }
         std::cout <<  std::setw(2) << std::setfill('0') << std::hex << int(screen[i]) << " ";
     }
+}
+
+void Chip8::debug_printInstruction(uint16_t instr){
+    std::cout <<  std::setw(4) << std::setfill('0') << std::hex << int(instr) << " ";
 }
 
 void Chip8::incrementPC(){
@@ -125,7 +130,9 @@ void Chip8::execute(){
     //start with the first bytes
      while(PC < 4096){ // make i the program counter
         //returns full 4 hex digit instruction
-        uint16_t instr = (memory[PC] << 4) | memory[PC+1];
+        uint16_t half_instr = memory[PC];
+        half_instr <<=8;
+        uint16_t instr = half_instr | memory[PC+1];
         uint8_t x = (instr & 0x0F00) >> 8;
         uint8_t y = (instr & 0x00F0) >> 4;
         uint8_t kk = instr & 0x00FF;
@@ -133,6 +140,7 @@ void Chip8::execute(){
         uint8_t bottom_2 = instr & 0x00FF;
         uint8_t n = instr & 0x000F;
         uint16_t addr = instr & 0x0FFF;
+        debug_printInstruction(instr);
         switch(memory[PC] >> 4){ // MSB
             case 0x00:
                 if(instr == 0x00E0){
@@ -244,12 +252,15 @@ void Chip8::execute(){
                 }
                 break;
         }
-     }
+        //debug_printScreen();
+    }
 }
 // assembly functions, xy = each 4bit hex val, nnn = addr/address, n = nibble/lowest 4 bit of instruction, kk = byte/8 bit
 void Chip8::Op_00E0()
 { // CLR, Clear display
-    std::cout << "Hi";
+    for(int i = 0; i < 2048; i++){
+        screen[i] = 0; 
+    }
     incrementPC();
 }
 
@@ -258,6 +269,7 @@ void Chip8::Op_00EE()
     // set program counter to the top of stack , subtracts one from stack pointer
     PC = stack[0];
     SP--;
+    incrementPC();
 }
 
 void Chip8::Op_1nnn(uint16_t nnn)
@@ -266,7 +278,7 @@ void Chip8::Op_1nnn(uint16_t nnn)
 }
 
 void Chip8::Op_2nnn(uint16_t nnn)
-{ // [CALL address] Call, inmcremend stack pointer, puts current PC on top of stack, setting it to nnnn
+{ // [CALL address] Call, inmcremend stack pointer, puts current PC on top of stack, setting it to nnn
     SP++;
     stack[0] = PC;
     PC = nnn;
@@ -400,7 +412,6 @@ void Chip8::Op_Dxyn(uint8_t Vx, uint8_t Vy, uint8_t n){
     //Bytes are displayed as sprites at coordinates in reg Vx and Vy.
     //If pixels are erased, Vf is set to 1, otherwise Vf is 0
     //If displayed outside coordinates, wrap around.
-    //Pixel in list equation; list_loc = (y * screen_width) + x
     uint8_t x = registers[Vx] % 64;
     uint8_t y = registers[Vy] % 32;
     registers[0x0F] = 0;
@@ -434,6 +445,7 @@ void Chip8::Op_Dxyn(uint8_t Vx, uint8_t Vy, uint8_t n){
         }
     }
     incrementPC();
+    debug_printScreen();
 }
 
 void Chip8::Op_Ex9E(uint8_t Vx){ // [SKP Vx] If key coresponding to value of Vx is currently pressed, PC increases by 2
