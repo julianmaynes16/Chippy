@@ -139,10 +139,30 @@ void Chip8::sdlInit(){
     SDL_RenderSetLogicalSize(render, 64, 32);
 
     SDL_UpdateWindowSurface(window);
-
+    SDL_Texture *texture = SDL_CreateTexture(render, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, 64, 32);
+    int texture_pitch = 0;
+    void* texture_pixels = NULL;
+    if(SDL_LockTexture(texture, NULL, &texture_pixels, &texture_pitch) != 0){
+        SDL_Log("Unable to lock texture: %s", SDL_GetError());
+    }else{
+       memcpy(texture_pixels, screen, texture_pitch * 32);
+    }
+    SDL_UnlockTexture(texture);
     //Hack to get window to stay up
-    SDL_Event e; bool quit = false; while( quit == false ){ while( SDL_PollEvent( &e ) ){ if( e.type == SDL_QUIT ) quit = true; } }
-
+    SDL_Event e; 
+    bool quit = false; 
+    while( quit == false ){
+         while( SDL_PollEvent( &e ) ){
+             if( e.type == SDL_QUIT ){
+                quit = true;
+            } 
+        } 
+        SDL_RenderClear(render);
+        SDL_RenderCopy(render, texture, NULL, NULL);
+        SDL_RenderPresent(render);
+    }
+    SDL_DestroyTexture(texture);
+    SDL_DestroyRenderer(render);
     SDL_DestroyWindow(window);
     SDL_Quit();
 }
@@ -300,7 +320,7 @@ void Chip8::Op_1nnn(uint16_t nnn)
 { // [JP address] Jump, set program countert to nnn
     if(PC == nnn){//terminating command
         std::cout << "Exiting..." << std::endl;
-        debug_printScreen();
+        //debug_printScreen();
         std::exit(EXIT_SUCCESS);
     } else{
     PC = nnn;

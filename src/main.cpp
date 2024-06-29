@@ -10,7 +10,9 @@ int main(int argc, char *argv[])
 {
 
     Chip8 chip8;
+    //chip8.sdlInit();
     chip8.execute();
-    chip8.debug_printScreen();
+    chip8.sdlInit();
+    //chip8.debug_printScreen();
     return 0;
 }
