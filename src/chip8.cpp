@@ -117,8 +117,14 @@ void Chip8::debug_printScreen(){
         if((i % 64) == 0){
             std::cout << "" << std::endl;
         }
-        std::cout <<  std::setw(2) << std::setfill('0') << std::hex << int(screen[i]) << " ";
+        if(screen[i] == 0xFFFFFFFF){
+            std::cout <<  std::setw(2) << std::setfill('0') << std::hex << 255 << " ";
+        }else{
+            std::cout <<  std::setw(2) << std::setfill('0') << std::hex << 0 << " ";
+        }
+       
     }
+    std::cout << "" << std::endl;
 }
 /**
  * @brief prints surrently executing assembly instruction in hex
@@ -136,7 +142,7 @@ void Chip8::incrementPC(){
 /**
  * @brief Returns screen list
  */
-uint8_t* Chip8::getScreen(){
+uint32_t* Chip8::getScreen(){
     return screen;
 }
 
@@ -455,30 +461,22 @@ void Chip8::Op_Dxyn(uint8_t Vx, uint8_t Vy, uint8_t n){
     uint8_t x = registers[Vx] % 64;
     uint8_t y = registers[Vy] % 32;
     registers[0x0F] = 0;
-    //starts at location I, reads n bytes
     for(int r = 0; r < n; r++){ // rows, 0xFF 0x23 0x82 0x48 0x34 0x67 0x55 0x65 
         uint8_t sprite_hex = memory[I_reg + r];  //0x65, 8 wide, 0110_0101
         for(int b = 7; b > 0; b--){ // bit
             if(((x + b) < 64) && ((y + r) < 32)){ // bounds check
                 int list_pos = ((y + r) * 64) + (x+(7-b));
-                uint8_t input_bit;
-                //screen[list_pos] = sprite_hex ^ // will either be 0x00 or 0xFF
-                //cases where xor will erase pixel, ie turn from 1 to 0
+                uint32_t input_bit;
                 if((sprite_hex & (1 << b)) != 0){
-                    input_bit = 0xFF;
+                    input_bit = 0xFFFFFFFF;
                 }else{
-                    input_bit = 0;
+                    input_bit = 0x00000000;
                 }
                 if((input_bit == 0xFF) && (screen[list_pos] == 0xFF)){
                     registers[0x0F] = 1;
                 }
                 screen[list_pos] ^= input_bit;
-                //ex input  = 0110 0101 & 1000_0000
-                //ex screen = 1010_1111
-                //0 0 | 0
-                //0 1 | 1
-                //1 0 | 1
-                //1 1 | 0
+               
             }
         }
     }

@@ -15,6 +15,7 @@ int main(int argc, char *argv[])
     while(!quit){
         chip8.execute();
         interface.displayScreen(&chip8);
+        //chip8.debug_printScreen();
     }
     
     return 0;

@@ -22,7 +22,7 @@ public:
 
     void incrementPC();
 
-    uint8_t* getScreen();
+    uint32_t* getScreen();
 
     void interpret();
 
@@ -166,7 +166,7 @@ public:
         // stack
         uint16_t stack[16];
         //screen, 64 x 32 pixels, 8 bytes x 4 bytes 
-        uint8_t screen[64*32]; //each pixel is either 0xFF (on)or 0x00(off)  
+        uint32_t screen[64*32]; //each pixel is either 0xFF (on)or 0x00(off)  
 
         const uint8_t sprite_0[5] = {0xF0, 0x90, 0x90, 0x90, 0xF0};
         const uint8_t sprite_1[5] = {0x20, 0x60, 0x20, 0x20, 0x70};
