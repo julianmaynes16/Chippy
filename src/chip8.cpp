@@ -150,6 +150,7 @@ uint32_t* Chip8::getScreen(){
  * @brief reads next assembly instruction and calls associated function
 */
 void Chip8::interpret(){
+    SDL_Event event;
     uint16_t half_instr = memory[PC];
     half_instr <<=8;
     uint16_t instr = half_instr | memory[PC+1];
@@ -292,10 +293,13 @@ void Chip8::soundDecrement(){
     }
 }
 
+
 /**
  * @brief Executes Code from address 0x200 (512) to 0xFFF (4095)
  */
 void Chip8::execute(){
+    //updates button list
+    updateKeyboard();
     //returns full 4 hex digit instruction
     interpret();
     delayDecrement();
@@ -452,7 +456,6 @@ void Chip8::Op_Cxkk(uint8_t Vx, uint8_t kk){ // [RND Vx, byte], generates random
     registers[Vx] = (rand() % 256) & kk;
     incrementPC();
 }
-//TODO
 void Chip8::Op_Dxyn(uint8_t Vx, uint8_t Vy, uint8_t n){ 
     // [DRW Vx, Vy, nibble], Read n bytes from memory starting at I. 
     //Bytes are displayed as sprites at coordinates in reg Vx and Vy.
@@ -483,11 +486,15 @@ void Chip8::Op_Dxyn(uint8_t Vx, uint8_t Vy, uint8_t n){
     incrementPC();
 }
 
-void Chip8::Op_Ex9E(uint8_t Vx){ // [SKP Vx] If key coresponding to value of Vx is currently pressed, PC increases by 2
+void Chip8::Op_Ex9E(uint8_t Vx, bool pressed){ // [SKP Vx] If key coresponding to value of Vx is currently pressed, PC increases by 2
+    if(pressed){
+        incrementPC();
+    }
     incrementPC();
 }
 
-void Chip8::Op_ExA1(uint8_t Vx){ // [SKNP Vx] If key coresponding to value of Vx is NOT currently pressed, PC increases by 2
+void Chip8::Op_ExA1(uint8_t Vx, bool not_pressed){ // [SKNP Vx] If key coresponding to value of Vx is NOT currently pressed, PC increases by 2
+
     incrementPC();
 }
 

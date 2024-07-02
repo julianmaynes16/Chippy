@@ -113,10 +113,10 @@ public:
     
     
 
-    void Op_Ex9E(uint8_t Vx); // [SKP Vx] If key coresponding to value of Vx is currently pressed, PC increases by 2
+    void Op_Ex9E(uint8_t Vx, bool pressed); // [SKP Vx] If key coresponding to value of Vx is currently pressed, PC increases by 2
     
 
-    void Op_ExA1(uint8_t Vx); // [SKNP Vx] If key coresponding to value of Vx is NOT currently pressed, PC increases by 2
+    void Op_ExA1(uint8_t Vx, bool not_pressed); // [SKNP Vx] If key coresponding to value of Vx is NOT currently pressed, PC increases by 2
     
 
     void Op_Fx07(uint8_t Vx); // [LD Vx, DT] Value of DT is placed into VX
@@ -167,7 +167,7 @@ public:
         uint16_t stack[16];
         //screen, 64 x 32 pixels, 8 bytes x 4 bytes 
         uint32_t screen[64*32]; //each pixel is either 0xFF (on)or 0x00(off)  
-
+        
         const uint8_t sprite_0[5] = {0xF0, 0x90, 0x90, 0x90, 0xF0};
         const uint8_t sprite_1[5] = {0x20, 0x60, 0x20, 0x20, 0x70};
         const uint8_t sprite_2[5] = {0xF0, 0x10, 0xF0, 0x80, 0xF0};
