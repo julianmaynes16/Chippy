@@ -35,6 +35,12 @@ void Interface::displayScreen(Chip8* chip8){
     SDL_RenderPresent(renderer);
 }
 
+void Interface::clearKeyboard(){
+    for(int i = 0; i < 16; i++){
+        keyboard[i]=0;
+    }
+}
+
 void Interface::updateKeyboard(){
     SDL_Event event;
     while(SDL_PollEvent(&event)){
@@ -44,9 +50,11 @@ void Interface::updateKeyboard(){
                     case SDLK_ESCAPE:
                         quit = true;
                         break;
+
                     case SDLK_x:
                         keyboard[0x0] = 1;
                         break;
+                   //top row      
                     case SDLK_1:
                         keyboard[0x1] = 1;
                         break;
@@ -59,6 +67,7 @@ void Interface::updateKeyboard(){
                     case SDLK_4:
                         keyboard[0xC] = 1;
                         break;
+                    //second row
                     case SDLK_q:
                         keyboard[4] = 1;
                         break;
@@ -71,6 +80,7 @@ void Interface::updateKeyboard(){
                     case SDLK_r:
                         keyboard[0xD] = 1;
                         break;
+                    //third row
                     case SDLK_a:
                         keyboard[7] = 1;
                         break;
@@ -83,6 +93,7 @@ void Interface::updateKeyboard(){
                     case SDLK_f:
                         keyboard[0xE] = 1;
                         break;
+                    //bottom row
                     case SDLK_z:
                         keyboard[0xA] = 1;
                         break;

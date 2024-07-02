@@ -24,7 +24,7 @@ public:
 
     uint32_t* getScreen();
 
-    void interpret();
+    void interpret(Interface* interface);
 
     void delayDecrement();
 
@@ -113,10 +113,10 @@ public:
     
     
 
-    void Op_Ex9E(uint8_t Vx, bool pressed); // [SKP Vx] If key coresponding to value of Vx is currently pressed, PC increases by 2
+    void Op_Ex9E(uint8_t Vx, Interface* interface); // [SKP Vx] If key coresponding to value of Vx is currently pressed, PC increases by 2
     
 
-    void Op_ExA1(uint8_t Vx, bool not_pressed); // [SKNP Vx] If key coresponding to value of Vx is NOT currently pressed, PC increases by 2
+    void Op_ExA1(uint8_t Vx, Interface* interface); // [SKNP Vx] If key coresponding to value of Vx is NOT currently pressed, PC increases by 2
     
 
     void Op_Fx07(uint8_t Vx); // [LD Vx, DT] Value of DT is placed into VX

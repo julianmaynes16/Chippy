@@ -1,4 +1,5 @@
 #include <chip8.h>
+#include <interface.h>
 #include <cstdint>
 #include <iostream>
 #include <SDL2/SDL.h>
@@ -149,8 +150,8 @@ uint32_t* Chip8::getScreen(){
 /**
  * @brief reads next assembly instruction and calls associated function
 */
-void Chip8::interpret(){
-    SDL_Event event;
+void Chip8::interpret(Interface* interface){
+    interface->updateKeyboard();
     uint16_t half_instr = memory[PC];
     half_instr <<=8;
     uint16_t instr = half_instr | memory[PC+1];
@@ -238,9 +239,9 @@ void Chip8::interpret(){
             break;
         case 0x0E:
             if((instr & 0x00FF) == 0x9E){
-                Op_Ex9E(x);
+                Op_Ex9E(x, interface);
             }else{
-                Op_ExA1(x);
+                Op_ExA1(x, interface);
             }
             break;
         case 0x0F:
@@ -275,6 +276,7 @@ void Chip8::interpret(){
             }
             break;
     }
+    interface->clearKeyboard();
 }
 /**
  * @brief decrements delay by 1. Should work at 60Hz but doesnt. Shouldnt be an issue
@@ -486,14 +488,14 @@ void Chip8::Op_Dxyn(uint8_t Vx, uint8_t Vy, uint8_t n){
     incrementPC();
 }
 
-void Chip8::Op_Ex9E(uint8_t Vx, bool pressed){ // [SKP Vx] If key coresponding to value of Vx is currently pressed, PC increases by 2
+void Chip8::Op_Ex9E(uint8_t Vx, Interface* interface){ // [SKP Vx] If key coresponding to value of Vx is currently pressed, PC increases by 2
     if(pressed){
         incrementPC();
     }
     incrementPC();
 }
 
-void Chip8::Op_ExA1(uint8_t Vx, bool not_pressed){ // [SKNP Vx] If key coresponding to value of Vx is NOT currently pressed, PC increases by 2
+void Chip8::Op_ExA1(uint8_t Vx, Interface* interface){ // [SKNP Vx] If key coresponding to value of Vx is NOT currently pressed, PC increases by 2
 
     incrementPC();
 }

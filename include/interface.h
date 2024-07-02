@@ -6,6 +6,7 @@ class Interface{
         Interface();
         ~Interface();
         void displayScreen(Chip8* chip8);
+        void clearKeyboard();
         void updateKeyboard();
 
     private:
