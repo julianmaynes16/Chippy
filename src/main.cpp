@@ -2,7 +2,6 @@
 #include <chip8.h>
 #include <interface.h>
 #include <stdio.h>
-#include <interface.h>
 #include <iostream>
 
 const int SCREEN_WIDTH = 64;
