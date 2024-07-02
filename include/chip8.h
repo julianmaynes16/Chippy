@@ -22,6 +22,14 @@ public:
 
     void incrementPC();
 
+    uint8_t* getScreen();
+
+    void interpret();
+
+    void delayDecrement();
+
+    void soundDecrement();
+
     void execute();
 
     // assembly functions, xy = each 4bit hex val, nnn = addr/address, n = nibble/lowest 4 bit of instruction, kk = byte/8 bit

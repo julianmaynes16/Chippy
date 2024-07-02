@@ -86,7 +86,9 @@ Chip8::Chip8(){
 }
 
 
-
+/**
+ * @brief prints our chip8's entire memory
+ */
 void Chip8::debug_printMemory()
 { // populates designated memory spaces
     for(int i = 0; i < 4096; i++){
@@ -97,7 +99,9 @@ void Chip8::debug_printMemory()
         std::cout << std::setw(2) << std::setfill('0') << std::hex << int(memory[i]) << " ";
     }
 }
-
+/**
+ * @brief prints values currently stored in registers
+ */
 void Chip8::debug_printRegisters()
 { // populates designated memory spaces
     for(int i = 0; i < 16; i++){
@@ -105,7 +109,9 @@ void Chip8::debug_printRegisters()
     }
     std::cout << std::endl;
 }
-
+/**
+ * @brief prints entire screen in terminal, 0x00 = black, 0xff = white
+ */
 void Chip8::debug_printScreen(){
     for(int i = 0; i < 2048 ; i++){
         if((i % 64) == 0){
@@ -114,190 +120,180 @@ void Chip8::debug_printScreen(){
         std::cout <<  std::setw(2) << std::setfill('0') << std::hex << int(screen[i]) << " ";
     }
 }
-
+/**
+ * @brief prints surrently executing assembly instruction in hex
+ */
 void Chip8::debug_printInstruction(uint16_t instr){
     std::cout <<  std::setw(4) << std::setfill('0') << std::hex << int(instr) << " ";
 }
-
+/**
+ * @brief Increases program counter by 2, allowing next instruction to be read
+ */
 void Chip8::incrementPC(){
     //Moves to next 4 hex digits
     PC+=2;
 }
-
-void Chip8::sdlInit(){
-      SDL_Window * window = nullptr;
-
-    SDL_Surface * screenSurface = nullptr;
-
-    SDL_Init(SDL_INIT_VIDEO);
-
-    window = SDL_CreateWindow("Chippy", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 64, 32, SDL_WINDOW_SHOWN);
-
-    screenSurface = SDL_GetWindowSurface(window);
-
-    SDL_Renderer *render = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
-    SDL_RenderSetLogicalSize(render, 64, 32);
-
-    SDL_UpdateWindowSurface(window);
-    SDL_Texture *texture = SDL_CreateTexture(render, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, 64, 32);
-    int texture_pitch = 0;
-    void* texture_pixels = NULL;
-    if(SDL_LockTexture(texture, NULL, &texture_pixels, &texture_pitch) != 0){
-        SDL_Log("Unable to lock texture: %s", SDL_GetError());
-    }else{
-       memcpy(texture_pixels, screen, texture_pitch * 32);
-    }
-    SDL_UnlockTexture(texture);
-    //Hack to get window to stay up
-    SDL_Event e; 
-    bool quit = false; 
-    while( quit == false ){
-         while( SDL_PollEvent( &e ) ){
-             if( e.type == SDL_QUIT ){
-                quit = true;
-            } 
-        } 
-        SDL_RenderClear(render);
-        SDL_RenderCopy(render, texture, NULL, NULL);
-        SDL_RenderPresent(render);
-    }
-    SDL_DestroyTexture(texture);
-    SDL_DestroyRenderer(render);
-    SDL_DestroyWindow(window);
-    SDL_Quit();
+/**
+ * @brief Returns screen list
+ */
+uint8_t* Chip8::getScreen(){
+    return screen;
 }
+
+/**
+ * @brief reads next assembly instruction and calls associated function
+*/
+void Chip8::interpret(){
+    uint16_t half_instr = memory[PC];
+    half_instr <<=8;
+    uint16_t instr = half_instr | memory[PC+1];
+    uint8_t x = (instr & 0x0F00) >> 8;
+    uint8_t y = (instr & 0x00F0) >> 4;
+    uint8_t kk = instr & 0x00FF;
+    uint8_t lsb =  instr & 0x000F;  
+    uint8_t bottom_2 = instr & 0x00FF;
+    uint8_t n = instr & 0x000F;
+    uint16_t addr = instr & 0x0FFF;
+    switch(memory[PC] >> 4){ // MSB
+        case 0x00:
+            if(instr == 0x00E0){
+                Op_00E0();
+            }else{
+                Op_00EE();
+            }
+            break;
+        case 0x01:
+            Op_1nnn(addr);
+            break;
+        case 0x02:
+            Op_2nnn(addr);
+            break;
+        case 0x03:
+            Op_3xkk(x, kk);
+            break;
+        case 0x04:
+            Op_4xkk(x, kk);
+            break;
+        case 0x05:
+            Op_5xy0(x,y);
+            break;
+        case 0x06:
+            Op_6xkk(x, kk);
+            break;
+        case 0x07:
+            Op_7xkk(x, kk);
+            break;
+        case 0x08: // 8 possibilities
+            switch(lsb){
+                case 0:
+                    Op_8xy0(x,y);
+                    break;
+                case 1:
+                    Op_8xy1(x,y);
+                    break;
+                case 2:
+                    Op_8xy2(x,y);
+                    break;
+                case 3:
+                    Op_8xy3(x,y);
+                    break;
+                case 4:
+                    Op_8xy4(x,y);
+                    break;
+                case 5:
+                    Op_8xy5(x,y);
+                    break;
+                case 6:
+                    Op_8xy6(x,y);
+                    break;
+                case 7:
+                    Op_8xy7(x,y);
+                    break;
+                case 0x0E:
+                    Op_8xyE(x,y);
+                    break;
+            }
+            break;
+        case 0x09:
+            Op_9xy0(x,y);
+            break;
+        case 0x0A:
+            Op_Annn(addr);
+            break;
+        case 0x0B:
+            Op_Bnnn(addr);
+            break;
+        case 0x0C:
+            Op_Cxkk(x, kk);
+            break;
+        case 0x0D:
+            Op_Dxyn(x,y,n);
+            break;
+        case 0x0E:
+            if((instr & 0x00FF) == 0x9E){
+                Op_Ex9E(x);
+            }else{
+                Op_ExA1(x);
+            }
+            break;
+        case 0x0F:
+            switch(bottom_2){
+                case 0x07:
+                    Op_Fx07(x);
+                    break;
+                case 0x0A:
+                    Op_Fx0A(x);
+                    break;
+                case 0x15:
+                    Op_Fx15(x);
+                    break;
+                case 0x18:
+                    Op_Fx18(x);
+                    break;
+                case 0x1E:
+                    Op_Fx1E(x);
+                    break;
+                case 0x29:
+                    Op_Fx29(x);
+                    break;
+                case 0x33:
+                    Op_Fx33(x);
+                    break;
+                case 0x55:
+                    Op_Fx55(x);
+                    break;
+                case 0x65:
+                    Op_Fx65(x);
+                    break;
+            }
+            break;
+    }
+}
+/**
+ * @brief decrements delay by 1. Should work at 60Hz but doesnt. Shouldnt be an issue
+ */
+void Chip8::delayDecrement(){
+    if(delayTimer > 0){
+        delayTimer--;
+    }
+}
+/**
+ * @brief decrements sound by 1. Should operate at 60Hz but doesnt
+ */
+void Chip8::soundDecrement(){
+    if(soundTimer > 0){
+        soundTimer--;
+    }
+}
+
 /**
  * @brief Executes Code from address 0x200 (512) to 0xFFF (4095)
  */
 void Chip8::execute(){
-    //start with the first bytes
-     while(PC < 4096){ // make i the program counter
-        //returns full 4 hex digit instruction
-        uint16_t half_instr = memory[PC];
-        half_instr <<=8;
-        uint16_t instr = half_instr | memory[PC+1];
-        uint8_t x = (instr & 0x0F00) >> 8;
-        uint8_t y = (instr & 0x00F0) >> 4;
-        uint8_t kk = instr & 0x00FF;
-        uint8_t lsb =  instr & 0x000F;  
-        uint8_t bottom_2 = instr & 0x00FF;
-        uint8_t n = instr & 0x000F;
-        uint16_t addr = instr & 0x0FFF;
-        switch(memory[PC] >> 4){ // MSB
-            case 0x00:
-                if(instr == 0x00E0){
-                    Op_00E0();
-                }else{
-                    Op_00EE();
-                }
-                break;
-            case 0x01:
-                Op_1nnn(addr);
-                break;
-            case 0x02:
-                Op_2nnn(addr);
-                break;
-            case 0x03:
-                Op_3xkk(x, kk);
-                break;
-            case 0x04:
-                Op_4xkk(x, kk);
-                break;
-            case 0x05:
-                Op_5xy0(x,y);
-                break;
-            case 0x06:
-                Op_6xkk(x, kk);
-                break;
-            case 0x07:
-                Op_7xkk(x, kk);
-                break;
-            case 0x08: // 8 possibilities
-                switch(lsb){
-                    case 0:
-                        Op_8xy0(x,y);
-                        break;
-                    case 1:
-                        Op_8xy1(x,y);
-                        break;
-                    case 2:
-                        Op_8xy2(x,y);
-                        break;
-                    case 3:
-                        Op_8xy3(x,y);
-                        break;
-                    case 4:
-                        Op_8xy4(x,y);
-                        break;
-                    case 5:
-                        Op_8xy5(x,y);
-                        break;
-                    case 6:
-                        Op_8xy6(x,y);
-                        break;
-                    case 7:
-                        Op_8xy7(x,y);
-                        break;
-                    case 0x0E:
-                        Op_8xyE(x,y);
-                        break;
-                }
-                break;
-            case 0x09:
-                Op_9xy0(x,y);
-                break;
-            case 0x0A:
-                Op_Annn(addr);
-                break;
-            case 0x0B:
-                Op_Bnnn(addr);
-                break;
-            case 0x0C:
-                Op_Cxkk(x, kk);
-                break;
-            case 0x0D:
-                Op_Dxyn(x,y,n);
-                break;
-            case 0x0E:
-                if((instr & 0x00FF) == 0x9E){
-                    Op_Ex9E(x);
-                }else{
-                    Op_ExA1(x);
-                }
-                break;
-            case 0x0F:
-                switch(bottom_2){
-                    case 0x07:
-                        Op_Fx07(x);
-                        break;
-                    case 0x0A:
-                        Op_Fx0A(x);
-                        break;
-                    case 0x15:
-                        Op_Fx15(x);
-                        break;
-                    case 0x18:
-                        Op_Fx18(x);
-                        break;
-                    case 0x1E:
-                        Op_Fx1E(x);
-                        break;
-                    case 0x29:
-                        Op_Fx29(x);
-                        break;
-                    case 0x33:
-                        Op_Fx33(x);
-                        break;
-                    case 0x55:
-                        Op_Fx55(x);
-                        break;
-                    case 0x65:
-                        Op_Fx65(x);
-                        break;
-                }
-                break;
-        }
-    }
+    //returns full 4 hex digit instruction
+    interpret();
+    delayDecrement();
+    soundDecrement();
 }
 // assembly functions, xy = each 4bit hex val, nnn = addr/address, n = nibble/lowest 4 bit of instruction, kk = byte/8 bit
 void Chip8::Op_00E0()
@@ -318,13 +314,7 @@ void Chip8::Op_00EE()
 
 void Chip8::Op_1nnn(uint16_t nnn)
 { // [JP address] Jump, set program countert to nnn
-    if(PC == nnn){//terminating command
-        std::cout << "Exiting..." << std::endl;
-        //debug_printScreen();
-        std::exit(EXIT_SUCCESS);
-    } else{
     PC = nnn;
-    }
 }
 
 void Chip8::Op_2nnn(uint16_t nnn)
