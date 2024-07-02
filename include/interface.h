@@ -4,7 +4,7 @@
 class Interface{
     public:
         Interface();
-        
+        ~Interface();
         void displayScreen(Chip8* chip8);
 
     private:

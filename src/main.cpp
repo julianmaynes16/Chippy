@@ -1,5 +1,6 @@
 #include <SDL2/SDL.h>
 #include <chip8.h>
+#include <interface.h>
 #include <stdio.h>
 #include <interface.h>
 #include <iostream>
