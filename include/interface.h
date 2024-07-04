@@ -8,6 +8,7 @@ class Interface{
         Interface();
         ~Interface();
         void displayScreen(Chip8* chip8);
+        void debug_displayKeyboard();
         void clearKeyboard();
         void updateKeyboard();
         bool anyKey();

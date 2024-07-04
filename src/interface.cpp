@@ -41,6 +41,13 @@ void Interface::clearKeyboard(){
     }
 }
 
+void Interface::debug_displayKeyboard(){
+    for(int i = 0; i < 16;i++){
+        std::cout << keyboard[i] << " ";
+    }
+    std::cout << " " << std::endl;
+}
+
 void Interface::updateKeyboard(){
     SDL_Event event;
     while(SDL_PollEvent(&event)){

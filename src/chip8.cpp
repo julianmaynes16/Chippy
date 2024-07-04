@@ -161,6 +161,7 @@ void Chip8::interpret(Interface* interface){
     uint8_t bottom_2 = instr & 0x00FF;
     uint8_t n = instr & 0x000F;
     uint16_t addr = instr & 0x0FFF;
+    debug_printInstruction(addr);
     switch(memory[PC] >> 4){ // MSB
         case 0x00:
             if(instr == 0x00E0){
@@ -275,7 +276,6 @@ void Chip8::interpret(Interface* interface){
             }
             break;
     }
-    interface->clearKeyboard();
 }
 /**
  * @brief decrements delay by 1. Should work at 60Hz but doesnt. Shouldnt be an issue
@@ -463,24 +463,29 @@ void Chip8::Op_Dxyn(uint8_t Vx, uint8_t Vy, uint8_t n){
     uint8_t x = registers[Vx] % 64;
     uint8_t y = registers[Vy] % 32;
     registers[0x0F] = 0;
+    bool override = false;
     for(int r = 0; r < n; r++){ // rows, 0xFF 0x23 0x82 0x48 0x34 0x67 0x55 0x65 
         uint8_t sprite_hex = memory[I_reg + r];  //0x65, 8 wide, 0110_0101
-        for(int b = 7; b > 0; b--){ // bit
+        for(int b = 7; b >= 0; b--){ // bit
             if(((x + b) < 64) && ((y + r) < 32)){ // bounds check
-                int list_pos = ((y + r) * 64) + (x+(7-b));
+                int list_pos = (((y + r) * 64) + (x+(7-b))) % 2048;
                 uint32_t input_bit;
                 if((sprite_hex & (1 << b)) != 0){
                     input_bit = 0xFFFFFFFF;
                 }else{
                     input_bit = 0x00000000;
                 }
-                if((input_bit == 0xFF) && (screen[list_pos] == 0xFF)){
-                    registers[0x0F] = 1;
+                if((input_bit == 0xFFFFFFFF) && (screen[list_pos] == 0xFFFFFFFF)){
+                    override = true;
                 }
                 screen[list_pos] ^= input_bit;
                
             }
         }
+    }
+    //debug_printScreen();
+    if(override){
+        registers[0x0F] = 1;
     }
     incrementPC();
 }
