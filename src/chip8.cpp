@@ -56,7 +56,7 @@ Chip8::Chip8(){
         memory[i + 150] = sprite_E[i];
         memory[i + 155] = sprite_F[i];
     }
-
+    std::cout << "Beginning game write..." << std::endl;
     //Load ROM
     for(auto const& directory_entry : std::filesystem::directory_iterator("rom/")){
         if(directory_entry.path().extension() == ".ch8"){

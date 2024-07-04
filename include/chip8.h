@@ -1,10 +1,10 @@
 #pragma once
-#include <interface.h>
 #include <cstdint>
 #include <iostream>
 #include <SDL2/SDL.h>
 #include <string>
 
+class Interface;
 class Chip8
 {
 public:

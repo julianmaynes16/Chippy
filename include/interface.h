@@ -1,4 +1,6 @@
-#include <chip8.h>
+#pragma once
+#include <SDL2/SDL.h>
+#include "chip8.h"
 #include <cstdint>
 #include <iostream>
 class Interface{
