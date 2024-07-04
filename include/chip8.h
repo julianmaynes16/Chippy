@@ -1,4 +1,5 @@
 #pragma once
+#include <interface.h>
 #include <cstdint>
 #include <iostream>
 #include <SDL2/SDL.h>
@@ -30,7 +31,7 @@ public:
 
     void soundDecrement();
 
-    void execute();
+    void execute(Interface* interface);
 
     // assembly functions, xy = each 4bit hex val, nnn = addr/address, n = nibble/lowest 4 bit of instruction, kk = byte/8 bit
     void Op_00E0();
@@ -122,7 +123,7 @@ public:
     void Op_Fx07(uint8_t Vx); // [LD Vx, DT] Value of DT is placed into VX
     
 
-    void Op_Fx0A(uint8_t Vx); // [LD Vx, K] All execution stops until a key is pressed, then the value if stored in Vx
+    void Op_Fx0A(uint8_t Vx, Interface* interface); // [LD Vx, K] All execution stops until a key is pressed, then the value if stored in Vx
     
 
     void Op_Fx15(uint8_t Vx); // [LD Dt, Vx] Set delay timer = Vx

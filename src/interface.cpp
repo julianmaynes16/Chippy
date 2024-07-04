@@ -110,3 +110,17 @@ void Interface::updateKeyboard(){
         }
     }
 }
+
+bool Interface::anyKey(){
+    bool keyPressed=false;
+    for(int i=0; i < 16; i++){
+        if(keyboard[i] == 1){
+            keyPressed=true;
+        }
+    }
+    if(keyPressed){
+        return true;
+    }else{
+        return false;
+    }
+}

@@ -8,14 +8,14 @@ class Interface{
         void displayScreen(Chip8* chip8);
         void clearKeyboard();
         void updateKeyboard();
-
+        bool anyKey();
+        bool keyboard[16];
+        bool quit;
     private:
 
         SDL_Window* window = nullptr;
         SDL_Renderer* renderer = nullptr;
         SDL_Texture* texture = nullptr;
-        bool keyboard[16];
-        bool quit;
         const int OUTPUT_WIDTH = 64;
         const int OUTPUT_HEIGHT = 32; 
         const int SCALE = 10;

@@ -12,8 +12,10 @@ int main(int argc, char *argv[])
     
     Chip8 chip8;
     Interface interface;
-    while(!quit){
-        chip8.execute();
+    while(!interface.quit){
+        interface.updateKeyboard();
+        chip8.execute(&interface);
+        interface.clearKeyboard();
         interface.displayScreen(&chip8);
         
     }

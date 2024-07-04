@@ -151,7 +151,6 @@ uint32_t* Chip8::getScreen(){
  * @brief reads next assembly instruction and calls associated function
 */
 void Chip8::interpret(Interface* interface){
-    interface->updateKeyboard();
     uint16_t half_instr = memory[PC];
     half_instr <<=8;
     uint16_t instr = half_instr | memory[PC+1];
@@ -250,7 +249,7 @@ void Chip8::interpret(Interface* interface){
                     Op_Fx07(x);
                     break;
                 case 0x0A:
-                    Op_Fx0A(x);
+                    Op_Fx0A(x, interface);
                     break;
                 case 0x15:
                     Op_Fx15(x);
@@ -299,11 +298,9 @@ void Chip8::soundDecrement(){
 /**
  * @brief Executes Code from address 0x200 (512) to 0xFFF (4095)
  */
-void Chip8::execute(){
-    //updates button list
-    updateKeyboard();
+void Chip8::execute(Interface* interface){
     //returns full 4 hex digit instruction
-    interpret();
+    interpret(interface);
     delayDecrement();
     soundDecrement();
 }
@@ -489,14 +486,16 @@ void Chip8::Op_Dxyn(uint8_t Vx, uint8_t Vy, uint8_t n){
 }
 
 void Chip8::Op_Ex9E(uint8_t Vx, Interface* interface){ // [SKP Vx] If key coresponding to value of Vx is currently pressed, PC increases by 2
-    if(pressed){
+    if(interface->keyboard[Vx] == 1){
         incrementPC();
     }
     incrementPC();
 }
 
 void Chip8::Op_ExA1(uint8_t Vx, Interface* interface){ // [SKNP Vx] If key coresponding to value of Vx is NOT currently pressed, PC increases by 2
-
+    if(interface->keyboard[Vx] != 1){
+        incrementPC();
+    }
     incrementPC();
 }
 
@@ -505,8 +504,17 @@ void Chip8::Op_Fx07(uint8_t Vx){ // [LD Vx, DT] Value of DT is placed into VX
     incrementPC();
 }
 
-void Chip8::Op_Fx0A(uint8_t Vx){ // [LD Vx, K] All execution stops until a key is pressed, then the value if stored in Vx
-    incrementPC();
+void Chip8::Op_Fx0A(uint8_t Vx, Interface* interface){ // [LD Vx, K] All execution stops until a key is pressed, then the value if stored in Vx
+    int press_location;
+    if(interface->anyKey()){
+        for(int i = 0; i < 16; i++){
+            if(interface->keyboard[i] == 1){
+                press_location= i;
+            }
+        }
+        registers[Vx] = press_location;
+        incrementPC();
+    }
 }
 
 void Chip8::Op_Fx15(uint8_t Vx){ // [LD Dt, Vx] Set delay timer = Vx
@@ -524,7 +532,8 @@ void Chip8::Op_Fx1E(uint8_t Vx){ // [Add I, Vx] Values of I and Vx, results stor
     incrementPC();
 }
 
-void Chip8::Op_Fx29(uint8_t Vx){ // [LD F, Vx] I = location of hex sprite for value of reg Vx 
+void Chip8::Op_Fx29(uint8_t Vx){ // [LD F, Vx] I = location of hex sprite for value of digit Vx 
+    I_reg = 80 + (5 * int(Vx));
     incrementPC();
 }
 
