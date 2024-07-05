@@ -161,7 +161,7 @@ void Chip8::interpret(Interface* interface){
     uint8_t bottom_2 = instr & 0x00FF;
     uint8_t n = instr & 0x000F;
     uint16_t addr = instr & 0x0FFF;
-    debug_printInstruction(addr);
+    debug_printInstruction(instr);
     switch(memory[PC] >> 4){ // MSB
         case 0x00:
             if(instr == 0x00E0){
