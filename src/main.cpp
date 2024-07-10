@@ -21,8 +21,7 @@ int main(int argc, char *argv[])
         //chip8.debug_printScreen();
         //interface.debug_displayKeyboard();
         interface.clearKeyboard();
-        
     }
-    
+    chip8.debug_printMemory();
     return 0;
 }
