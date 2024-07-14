@@ -163,88 +163,94 @@ void Chip8::interpret(Interface* interface){
     uint16_t addr = instr & 0x0FFF;
     debug_printInstruction(instr);
     switch(memory[PC] >> 4){ // MSB
-        case 0x00:
-            if(instr == 0x00E0){
-                Op_00E0();
-            }else{
-                Op_00EE();
+        case 0x0:
+            switch(bottom_2){
+                case 0xE0:
+                    Op_00E0();
+                    break;
+                case 0xEE:
+                    Op_00EE();
+                    break;
             }
             break;
-        case 0x01:
+        case 0x1:
             Op_1nnn(addr);
             break;
-        case 0x02:
+        case 0x2:
             Op_2nnn(addr);
             break;
-        case 0x03:
+        case 0x3:
             Op_3xkk(x, kk);
             break;
-        case 0x04:
+        case 0x4:
             Op_4xkk(x, kk);
             break;
-        case 0x05:
+        case 0x5:
             Op_5xy0(x,y);
             break;
-        case 0x06:
+        case 0x6:
             Op_6xkk(x, kk);
             break;
-        case 0x07:
+        case 0x7:
             Op_7xkk(x, kk);
             break;
-        case 0x08: // 8 possibilities
+        case 0x8: // 8 possibilities
             switch(lsb){
-                case 0:
+                case 0x0:
                     Op_8xy0(x,y);
                     break;
-                case 1:
+                case 0x1:
                     Op_8xy1(x,y);
                     break;
-                case 2:
+                case 0x2:
                     Op_8xy2(x,y);
                     break;
-                case 3:
+                case 0x3:
                     Op_8xy3(x,y);
                     break;
-                case 4:
+                case 0x4:
                     Op_8xy4(x,y);
                     break;
-                case 5:
+                case 0x5:
                     Op_8xy5(x,y);
                     break;
-                case 6:
+                case 0x6:
                     Op_8xy6(x,y);
                     break;
-                case 7:
+                case 0x7:
                     Op_8xy7(x,y);
                     break;
-                case 0x0E:
+                case 0xE:
                     Op_8xyE(x,y);
                     break;
             }
             break;
-        case 0x09:
+        case 0x9:
             Op_9xy0(x,y);
             break;
-        case 0x0A:
+        case 0xA:
             Op_Annn(addr);
             break;
-        case 0x0B:
+        case 0xB:
             Op_Bnnn(addr);
             break;
-        case 0x0C:
+        case 0xC:
             Op_Cxkk(x, kk);
             break;
-        case 0x0D:
+        case 0xD:
             Op_Dxyn(x,y,n);
             break;
-        case 0x0E:
-            if((instr & 0x00FF) == 0x9E){
-                Op_Ex9E(x, interface);
-            }else{
-                Op_ExA1(x, interface);
+        case 0xE:
+            switch(bottom_2){
+                case 0x9E:
+                    Op_Ex9E(x, interface);
+                    break;
+                case 0xA1:
+                    Op_ExA1(x, interface);
+                    break;
             }
             break;
-        case 0x0F:
+        case 0xF:
             switch(bottom_2){
                 case 0x07:
                     Op_Fx07(x);
@@ -316,8 +322,7 @@ void Chip8::Op_00E0()
 void Chip8::Op_00EE()
 { // RET, return from subroutine
     // set program counter to the top of stack , subtracts one from stack pointer
-    PC = stack[0];
-    SP--;
+    PC = stack[--SP];
     incrementPC();
 }
 
@@ -328,8 +333,7 @@ void Chip8::Op_1nnn(uint16_t nnn)
 
 void Chip8::Op_2nnn(uint16_t nnn)
 { // [CALL address] Call, inmcremend stack pointer, puts current PC on top of stack, setting it to nnn
-    SP++;
-    stack[0] = PC;
+    stack[SP++] = PC;
     PC = nnn;
 }
 
@@ -430,7 +434,7 @@ void Chip8::Op_8xy7(uint8_t Vx, uint8_t Vy){ // [SUBN Vx, Vy] Vx = Vy - Vx,
 }
 
 void Chip8::Op_8xyE(uint8_t Vx, uint8_t Vy){ // [SHL Vx {, Vy}] Vx = Vx SHL 1, 
-    registers[0x0F] = registers[Vx] & 0x80;
+    registers[0xF] = registers[Vx] & 0x8;
     registers[Vx] <<= 1;
     incrementPC();
 }
@@ -491,14 +495,14 @@ void Chip8::Op_Dxyn(uint8_t Vx, uint8_t Vy, uint8_t n){
 }
 
 void Chip8::Op_Ex9E(uint8_t Vx, Interface* interface){ // [SKP Vx] If key coresponding to value of Vx is currently pressed, PC increases by 2
-    if(interface->keyboard[Vx] == 1){
+    if(interface->keyboard[registers[Vx]]){
         incrementPC();
     }
     incrementPC();
 }
 
 void Chip8::Op_ExA1(uint8_t Vx, Interface* interface){ // [SKNP Vx] If key coresponding to value of Vx is NOT currently pressed, PC increases by 2
-    if(interface->keyboard[Vx] != 1){
+    if(!(interface->keyboard[registers[Vx]])){
         incrementPC();
     }
     incrementPC();
@@ -513,7 +517,7 @@ void Chip8::Op_Fx0A(uint8_t Vx, Interface* interface){ // [LD Vx, K] All executi
     int press_location;
     if(interface->anyKey()){
         for(int i = 0; i < 16; i++){
-            if(interface->keyboard[i] == 1){
+            if(interface->keyboard[i]){
                 press_location= i;
             }
         }
@@ -543,13 +547,9 @@ void Chip8::Op_Fx29(uint8_t Vx){ // [LD F, Vx] I = location of hex sprite for va
 }
 
 void Chip8::Op_Fx33(uint8_t Vx){ // [LD B, Vx] I = decimal vlaue of Vx, places hundreds digit in memory at location in I, tens digit at I + 1, ones digit at I + 2 
-    uint8_t hundreds_digit = registers[Vx] / 100;
-    uint8_t tens_digit = (registers[Vx] - (hundreds_digit * 100)) / 10;
-    uint8_t ones_digit = (registers[Vx] - (hundreds_digit * 100)) % 10;
-    
-    memory[I_reg] = hundreds_digit;
-    memory[I_reg + 1] = tens_digit;
-    memory[I_reg + 2] = ones_digit; 
+    memory[I_reg] = registers[Vx] / 100;
+    memory[I_reg + 1] = (registers[Vx] / 10) % 10;
+    memory[I_reg + 2] = registers[Vx] % 10; 
     incrementPC();
 }
 
