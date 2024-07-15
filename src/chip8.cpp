@@ -434,7 +434,7 @@ void Chip8::Op_8xy7(uint8_t Vx, uint8_t Vy){ // [SUBN Vx, Vy] Vx = Vy - Vx,
 }
 
 void Chip8::Op_8xyE(uint8_t Vx, uint8_t Vy){ // [SHL Vx {, Vy}] Vx = Vx SHL 1, 
-    registers[0xF] = registers[Vx] & 0x8;
+    registers[0xF] = (registers[Vx] & 0x80) >> 7;
     registers[Vx] <<= 1;
     incrementPC();
 }
