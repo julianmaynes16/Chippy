@@ -15,7 +15,8 @@ int main(int argc, char *argv[])
 
     uint32_t execution_cycle = 0;
     //how frequent program will run, lower = faster  
-    int delay_value = 50000;
+    //int delay_value = 50000;
+    int delay_value = 5000000000;
     while(!interface.quit){
         if(!(execution_cycle % delay_value)){
             interface.updateKeyboard();

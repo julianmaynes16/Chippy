@@ -388,7 +388,7 @@ void Chip8::Op_8xy1(uint8_t Vx, uint8_t Vy){ // [Vx OR Vy] Bitwise OR on Vx and 
 }
 
 void Chip8::Op_8xy2(uint8_t Vx, uint8_t Vy){ // [Vx AND Vy] Bitwise AND on Vx and Vy, stores result in Vx 
-    registers[Vx] = (registers[Vx] & registers[Vy]);
+    registers[Vx] &= registers[Vy];
     incrementPC();
 }
 
@@ -399,37 +399,39 @@ void Chip8::Op_8xy3(uint8_t  Vx, uint8_t Vy){ // [Vx XOR Vy] Bitwise XOR on Vx a
 
 void Chip8::Op_8xy4(uint8_t Vx, uint8_t Vy){ // [ADD Vx, Vy] Vx = Vx+Vy, Vf = carry
     uint16_t result = (registers[Vx] + registers[Vy]);
+    registers[Vx] = uint8_t(result);
     if (result > 255){
         registers[0x0F] = 1;
     }else{
         registers[0x0F] = 0;
     }
-    registers[Vx] = uint8_t(result);
     incrementPC();
 }
 void Chip8::Op_8xy5(uint8_t Vx, uint8_t Vy){ // [SUB Vx, Vy] Vx = Vx-Vy, Vf = 1 if Vx>Vy, otheriwse 0
+    
     if(registers[Vx] >= registers[Vy]){
-        registers[0x0F] = 1;
+        registers[0xF] = 1;
     }else{
-        registers[0x0F] = 0;
+        registers[0xF] = 0;
     }
-    registers[Vx] = (registers[Vx] - registers[Vy]);
+    registers[Vx] -= registers[Vy];
     incrementPC();
 }
 
 void Chip8::Op_8xy6(uint8_t Vx, uint8_t Vy){ // [SHR Vx {, Vy}] Vx = Vx SHR 1y, Vf = least significant bit
-    registers[0x0F] = registers[Vx] & 1;
+    
+    registers[0xF] = registers[Vx] & 0x1;
     registers[Vx] >>= 1;
     incrementPC();
 }
 
 void Chip8::Op_8xy7(uint8_t Vx, uint8_t Vy){ // [SUBN Vx, Vy] Vx = Vy - Vx, 
-    if(registers[Vy] >= registers[Vx]){
-        registers[0x0F] = 1;
-    }else{
-        registers[0x0F] = 0;
-    }
     registers[Vx] = (registers[Vy] - registers[Vx]);
+    if(registers[Vy] >= registers[Vx]){
+        registers[0xF] = 1;
+    }else{
+        registers[0xF] = 0;
+    }
     incrementPC();
 }
 
@@ -466,7 +468,7 @@ void Chip8::Op_Dxyn(uint8_t Vx, uint8_t Vy, uint8_t n){
     //If displayed outside coordinates, wrap around.
     uint8_t x = registers[Vx] % 64;
     uint8_t y = registers[Vy] % 32;
-    registers[0x0F] = 0;
+    registers[0xF] = 0;
     bool override = false;
     for(int r = 0; r < n; r++){ // rows, 0xFF 0x23 0x82 0x48 0x34 0x67 0x55 0x65 
         uint8_t sprite_hex = memory[I_reg + r];  //0x65, 8 wide, 0110_0101
