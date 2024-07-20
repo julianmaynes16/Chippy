@@ -161,7 +161,7 @@ void Chip8::interpret(Interface* interface){
     uint8_t bottom_2 = instr & 0x00FF;
     uint8_t n = instr & 0x000F;
     uint16_t addr = instr & 0x0FFF;
-    debug_printInstruction(instr);
+    //debug_printInstruction(instr);
     switch(memory[PC] >> 4){ // MSB
         case 0x0:
             switch(bottom_2){
@@ -399,13 +399,22 @@ void Chip8::Op_8xy3(uint8_t  Vx, uint8_t Vy){ // [Vx XOR Vy] Bitwise XOR on Vx a
 
 void Chip8::Op_8xy4(uint8_t Vx, uint8_t Vy){ // [ADD Vx, Vy] Vx = Vx+Vy, Vf = carry
     uint16_t result = (registers[Vx] + registers[Vy]);
+<<<<<<< HEAD
     
     if (result > 255){
         registers[0x0F] = 1;
     }else{
         registers[0x0F] = 0;
     }
+=======
+>>>>>>> 84fc983bc9e0244f8848ca340485dfd40970b7d5
     registers[Vx] = uint8_t(result);
+    if (result > 255){
+        registers[0xF] = 1;
+    }else{
+        registers[0xF] = 0;
+    }
+    
     incrementPC();
 }
 void Chip8::Op_8xy5(uint8_t Vx, uint8_t Vy){ // [SUB Vx, Vy] Vx = Vx-Vy, Vf = 1 if Vx>Vy, otheriwse 0
@@ -429,10 +438,18 @@ void Chip8::Op_8xy6(uint8_t Vx, uint8_t Vy){ // [SHR Vx {, Vy}] Vx = Vx SHR 1y, 
 void Chip8::Op_8xy7(uint8_t Vx, uint8_t Vy){ // [SUBN Vx, Vy] Vx = Vy - Vx, 
     registers[Vx] = (registers[Vy] - registers[Vx]);
     if(registers[Vy] >= registers[Vx]){
+<<<<<<< HEAD
         registers[0xF] = 1;
     }else{
         registers[0xF] = 0;
     }
+=======
+        registers[0x0F] = 1;
+    }else{
+        registers[0x0F] = 0;
+    }
+   
+>>>>>>> 84fc983bc9e0244f8848ca340485dfd40970b7d5
     incrementPC();
 }
 
@@ -474,7 +491,7 @@ void Chip8::Op_Dxyn(uint8_t Vx, uint8_t Vy, uint8_t n){
     for(int r = 0; r < n; r++){ // rows, 0xFF 0x23 0x82 0x48 0x34 0x67 0x55 0x65 
         uint8_t sprite_hex = memory[I_reg + r];  //0x65, 8 wide, 0110_0101
         for(int b = 7; b >= 0; b--){ // bit
-            if(((x + b) < 64) && ((y + r) < 32)){ // bounds check
+            //if(((x + b) < 64) && ((y + r) < 32)){ // bounds check
                 int list_pos = (((y + r) * 64) + (x+(7-b))) % 2048;
                 uint32_t input_bit;
                 if((sprite_hex & (1 << b)) != 0){
@@ -487,7 +504,7 @@ void Chip8::Op_Dxyn(uint8_t Vx, uint8_t Vy, uint8_t n){
                 }
                 screen[list_pos] ^= input_bit;
                
-            }
+            //}
         }
     }
     //debug_printScreen();
@@ -557,14 +574,14 @@ void Chip8::Op_Fx33(uint8_t Vx){ // [LD B, Vx] I = decimal vlaue of Vx, places h
 }
 
 void Chip8::Op_Fx55(uint8_t Vx){ // [LD [I], Vx] Copies values of registers V0 through Vx into memory starting at address I
-    for(int i = 0; i <= Vx; i++){
+    for(uint8_t i = 0; i <= Vx; i++){
         memory[I_reg + i] = registers[i];
     }
     incrementPC();
 }
 
 void Chip8::Op_Fx65(uint8_t Vx){ // [LD Vx, [I]] Puts values from memory starting at location In into registers V0 through Vx
-    for(int i = 0; i <= Vx; i++){
+    for(uint8_t i = 0; i <= Vx; i++){
         registers[i] = memory[I_reg + i];
     }
     incrementPC();
