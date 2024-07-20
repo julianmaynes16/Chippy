@@ -307,8 +307,6 @@ void Chip8::soundDecrement(){
 void Chip8::execute(Interface* interface){
     //returns full 4 hex digit instruction
     interpret(interface);
-    delayDecrement();
-    soundDecrement();
 }
 // assembly functions, xy = each 4bit hex val, nnn = addr/address, n = nibble/lowest 4 bit of instruction, kk = byte/8 bit
 void Chip8::Op_00E0()
@@ -399,15 +397,6 @@ void Chip8::Op_8xy3(uint8_t  Vx, uint8_t Vy){ // [Vx XOR Vy] Bitwise XOR on Vx a
 
 void Chip8::Op_8xy4(uint8_t Vx, uint8_t Vy){ // [ADD Vx, Vy] Vx = Vx+Vy, Vf = carry
     uint16_t result = (registers[Vx] + registers[Vy]);
-<<<<<<< HEAD
-    
-    if (result > 255){
-        registers[0x0F] = 1;
-    }else{
-        registers[0x0F] = 0;
-    }
-=======
->>>>>>> 84fc983bc9e0244f8848ca340485dfd40970b7d5
     registers[Vx] = uint8_t(result);
     if (result > 255){
         registers[0xF] = 1;
@@ -438,18 +427,11 @@ void Chip8::Op_8xy6(uint8_t Vx, uint8_t Vy){ // [SHR Vx {, Vy}] Vx = Vx SHR 1y, 
 void Chip8::Op_8xy7(uint8_t Vx, uint8_t Vy){ // [SUBN Vx, Vy] Vx = Vy - Vx, 
     registers[Vx] = (registers[Vy] - registers[Vx]);
     if(registers[Vy] >= registers[Vx]){
-<<<<<<< HEAD
-        registers[0xF] = 1;
-    }else{
-        registers[0xF] = 0;
-    }
-=======
         registers[0x0F] = 1;
     }else{
         registers[0x0F] = 0;
     }
    
->>>>>>> 84fc983bc9e0244f8848ca340485dfd40970b7d5
     incrementPC();
 }
 
@@ -562,7 +544,7 @@ void Chip8::Op_Fx1E(uint8_t Vx){ // [Add I, Vx] Values of I and Vx, results stor
 }
 
 void Chip8::Op_Fx29(uint8_t Vx){ // [LD F, Vx] I = location of hex sprite for value of digit Vx 
-    I_reg = 80 + (5 * int(Vx));
+    I_reg = 80 + (5 * int(registers[Vx]));
     incrementPC();
 }
 
