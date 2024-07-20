@@ -399,12 +399,13 @@ void Chip8::Op_8xy3(uint8_t  Vx, uint8_t Vy){ // [Vx XOR Vy] Bitwise XOR on Vx a
 
 void Chip8::Op_8xy4(uint8_t Vx, uint8_t Vy){ // [ADD Vx, Vy] Vx = Vx+Vy, Vf = carry
     uint16_t result = (registers[Vx] + registers[Vy]);
-    registers[Vx] = uint8_t(result);
+    
     if (result > 255){
         registers[0x0F] = 1;
     }else{
         registers[0x0F] = 0;
     }
+    registers[Vx] = uint8_t(result);
     incrementPC();
 }
 void Chip8::Op_8xy5(uint8_t Vx, uint8_t Vy){ // [SUB Vx, Vy] Vx = Vx-Vy, Vf = 1 if Vx>Vy, otheriwse 0
