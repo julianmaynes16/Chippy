@@ -10,10 +10,12 @@ const int SCREEN_HEIGHT = 32;
 
 int main(int argc, char *argv[])
 {
+    if(argc < 2){
+        std::cout << "Please add a secondary argument for delay (1-3 works well)." << std::endl;
+        return 0;
+    }
     Chip8 chip8;
     Interface interface;
-
-    uint32_t execution_cycle = 0;
     //how frequent program will run, lower = faster  
     //int delay_value = 500000;
     //int delay_value = 15000;
@@ -22,7 +24,9 @@ int main(int argc, char *argv[])
     std::chrono::high_resolution_clock::time_point execution_time = std::chrono::high_resolution_clock::now();
     std::chrono::high_resolution_clock::time_point start_60_time = std::chrono::high_resolution_clock::now();
     std::chrono::high_resolution_clock::time_point clear_time = std::chrono::high_resolution_clock::now();
+
     while(!interface.quit){
+        
         //new time
         std::chrono::high_resolution_clock::time_point timestamp = std::chrono::high_resolution_clock::now();
         //total runtime
@@ -40,8 +44,10 @@ int main(int argc, char *argv[])
             interface.updateKeyboard();
             interface.displayScreen(&chip8);
             //interface.debug_displayKeyboard();
+            
+            //SDL_CloseAudioDevice(interface.device);
             chip8.delayDecrement();
-            chip8.soundDecrement();
+            chip8.soundDecrement(&interface);
             start_60_time = std::chrono::high_resolution_clock::now();
             
         }
@@ -49,7 +55,6 @@ int main(int argc, char *argv[])
             interface.clearKeyboard();
             clear_time = std::chrono::high_resolution_clock::now();
         }
-        execution_cycle++;
     }
     chip8.debug_printMemory();
     return 0;

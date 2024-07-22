@@ -29,7 +29,7 @@ public:
 
     void delayDecrement();
 
-    void soundDecrement();
+    void soundDecrement(Interface* interface);
 
     void execute(Interface* interface);
 

@@ -294,9 +294,12 @@ void Chip8::delayDecrement(){
 /**
  * @brief decrements sound by 1. Should operate at 60Hz but doesnt
  */
-void Chip8::soundDecrement(){
+void Chip8::soundDecrement(Interface* interface){
     if(soundTimer > 0){
+        SDL_PauseAudioDevice(interface->device, 0);
         soundTimer--;
+    }else{
+        SDL_PauseAudioDevice(interface->device, 0);
     }
 }
 
