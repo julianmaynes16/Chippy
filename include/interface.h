@@ -9,7 +9,11 @@ class Interface{
         ~Interface();
         SDL_AudioDeviceID device;
         void displayScreen(Chip8* chip8);
-        void squarewave(short* buffer);
+        void audioCallback(void *userdata, uint8_t *stream, int len);
+        void callback(void *userdata, Uint8 *stream, int len);
+        void audioPlay();
+        void audioStop();
+        void squarewave(short *buffer);
         void debug_displayKeyboard();
         void debug_printBuffer();
         void clearKeyboard();

@@ -294,15 +294,15 @@ void Chip8::delayDecrement(){
 /**
  * @brief decrements sound by 1. Should operate at 60Hz but doesnt
  */
-void Chip8::soundDecrement(Interface* interface){
+void Chip8::soundDecrement(Audio* audio){
     if(soundTimer > 0){
-        SDL_PauseAudioDevice(interface->device, 0);
         soundTimer--;
-    }else{
-        SDL_PauseAudioDevice(interface->device, 0);
     }
 }
 
+uint8_t Chip8::getSoundTimer(){
+    return soundTimer;
+}
 
 /**
  * @brief Executes Code from address 0x200 (512) to 0xFFF (4095)

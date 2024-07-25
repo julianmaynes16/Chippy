@@ -1,4 +1,5 @@
 #pragma once
+#include <audio.h>
 #include <cstdint>
 #include <iostream>
 #include <SDL2/SDL.h>
@@ -29,7 +30,9 @@ public:
 
     void delayDecrement();
 
-    void soundDecrement(Interface* interface);
+    void soundDecrement(Audio* audio);
+
+    uint8_t getSoundTimer();
 
     void execute(Interface* interface);
 

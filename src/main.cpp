@@ -1,6 +1,7 @@
 #include <SDL2/SDL.h>
 #include <chip8.h>
 #include <interface.h>
+#include <audio.h>
 #include <stdio.h>
 #include <iostream>
 #include <chrono>
@@ -16,6 +17,7 @@ int main(int argc, char *argv[])
     }
     Chip8 chip8;
     Interface interface;
+    Audio audio;
     //how frequent program will run, lower = faster  
     //int delay_value = 500000;
     //int delay_value = 15000;
@@ -47,7 +49,12 @@ int main(int argc, char *argv[])
             
             //SDL_CloseAudioDevice(interface.device);
             chip8.delayDecrement();
-            chip8.soundDecrement(&interface);
+            chip8.soundDecrement(&audio);
+            if(chip8.getSoundTimer() > 0){
+                audio.audio_play();
+            }else{
+                audio.audio_stop();
+            }
             start_60_time = std::chrono::high_resolution_clock::now();
             
         }

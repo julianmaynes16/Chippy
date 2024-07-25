@@ -13,28 +13,7 @@ Interface::Interface(){
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, OUTPUT_WIDTH, OUTPUT_HEIGHT);
     
-    for(int i = 0; i < BUFFER_SIZE; i++){
-        buffer[i] = 0;
-    }
     
-    SDL_AudioSpec spec;
-    SDL_zero(spec);
-    spec.freq = FREQUENCY;
-    spec.format = AUDIO_S16SYS;
-    spec.channels = 1;
-    spec.samples = 735;
-    spec.callback = nullptr;
-
-    device = SDL_OpenAudioDevice(NULL, 0, &spec, NULL, 0);
-
-    squarewave(buffer);
-    
-    SDL_QueueAudio(device, buffer, 735 * 2);
-    //SDL_PauseAudio(0);
-    //debug_printBuffer();
-
-    //SDL_Delay(3000);
-    //SDL_CloseAudioDevice(device);
     for (int i = 0; i < 16; i++){
         keyboard[i] = 0;
     }
@@ -45,6 +24,7 @@ Interface::~Interface(){
     SDL_DestroyWindow(window);
     SDL_DestroyTexture(texture);
     SDL_DestroyRenderer(renderer);
+    SDL_CloseAudioDevice(device);
     SDL_Quit();
 }
 
@@ -57,14 +37,6 @@ void Interface::displayScreen(Chip8* chip8){
     SDL_RenderCopy(renderer,texture, nullptr, nullptr);
 
     SDL_RenderPresent(renderer);
-}
-
-void Interface::squarewave(short* buffer){
-    //fill up 100 sample buffer
-    for(int i = 0; i < BUFFER_SIZE; i++){
-        buffer[i] = ((i % PERIOD) < HALF_PERIOD) ? VOLUME : -VOLUME;
-        //std::cout << buffer[i] << std::endl;
-    }
 }
 
 void Interface::clearKeyboard(){
