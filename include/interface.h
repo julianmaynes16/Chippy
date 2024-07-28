@@ -37,7 +37,7 @@ class Interface{
         
         const int SAMPLE_RATE = 44100;
         //Default value
-        short VOLUME = 15000;
+        short VOLUME = 3000;
         const int PERIOD = SAMPLE_RATE / 440; // 100
         const int HALF_PERIOD = PERIOD / 2; // 50
         static void callback(void* beeper, uint8_t* stream, int length);
