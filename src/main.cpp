@@ -1,7 +1,6 @@
 #include <SDL2/SDL.h>
 #include <chip8.h>
 #include <interface.h>
-#include <audio.h>
 #include <stdio.h>
 #include <iostream>
 #include <chrono>
@@ -17,12 +16,13 @@ int main(int argc, char *argv[])
     }
     Chip8 chip8;
     Interface interface;
-    Audio audio;
     //how frequent program will run, lower = faster  
     //int delay_value = 500000;
     //int delay_value = 15000;
     //origin time
     int delay_value = std::stoi(argv[1]);
+    short input_volume = std::stoi(argv[2]);
+    interface.setVolume(input_volume);
     std::chrono::high_resolution_clock::time_point execution_time = std::chrono::high_resolution_clock::now();
     std::chrono::high_resolution_clock::time_point start_60_time = std::chrono::high_resolution_clock::now();
     std::chrono::high_resolution_clock::time_point clear_time = std::chrono::high_resolution_clock::now();
@@ -41,28 +41,25 @@ int main(int argc, char *argv[])
             chip8.execute(&interface);
             execution_time = std::chrono::high_resolution_clock::now();
         }
-        //60fps screen and keyboard read
+        //60fps screen and keyboard read + audio update
         if((elapsed_60_runtime.count()) >  0.01666667){
             interface.updateKeyboard();
             interface.displayScreen(&chip8);
-            //interface.debug_displayKeyboard();
-            
-            //SDL_CloseAudioDevice(interface.device);
             chip8.delayDecrement();
-            chip8.soundDecrement(&audio);
+            chip8.soundDecrement();
             if(chip8.getSoundTimer() > 0){
-                audio.audio_play();
+                interface.audioPlay();
             }else{
-                audio.audio_stop();
+                interface.audioStop();
             }
             start_60_time = std::chrono::high_resolution_clock::now();
             
         }
+        //clears keyboard; too low = slow response, too high = too fast
         if((elapsed_clear_runtime.count()) >  0.25){
             interface.clearKeyboard();
             clear_time = std::chrono::high_resolution_clock::now();
         }
     }
-    chip8.debug_printMemory();
     return 0;
 }

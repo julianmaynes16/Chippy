@@ -83,7 +83,6 @@ Chip8::Chip8(){
            } 
         }
     }
-    //std::cout << "Couldn't find ROM. Make sure the file is in the rom folder and has the .ch8 extension" << std::endl;
 }
 
 
@@ -99,6 +98,9 @@ void Chip8::debug_printMemory()
         }
         std::cout << std::setw(2) << std::setfill('0') << std::hex << int(memory[i]) << " ";
     }
+}
+void Chip8::debug_printSoundTimer(){
+    std::cout << "Sound Timer: " << int(soundTimer) << std::endl;
 }
 /**
  * @brief prints values currently stored in registers
@@ -128,7 +130,7 @@ void Chip8::debug_printScreen(){
     std::cout << "" << std::endl;
 }
 /**
- * @brief prints surrently executing assembly instruction in hex
+ * @brief prints currently executing assembly instruction in hex
  */
 void Chip8::debug_printInstruction(uint16_t instr){
     std::cout <<  std::setw(4) << std::setfill('0') << std::hex << int(instr) << " ";
@@ -284,7 +286,7 @@ void Chip8::interpret(Interface* interface){
     }
 }
 /**
- * @brief decrements delay by 1. Should work at 60Hz but doesnt. Shouldnt be an issue
+ * @brief decrements delay by 1. Should work at 60Hz 
  */
 void Chip8::delayDecrement(){
     if(delayTimer > 0){
@@ -292,14 +294,16 @@ void Chip8::delayDecrement(){
     }
 }
 /**
- * @brief decrements sound by 1. Should operate at 60Hz but doesnt
+ * @brief decrements sound by 1. Should operate at 60Hz 
  */
-void Chip8::soundDecrement(Audio* audio){
+void Chip8::soundDecrement(){
     if(soundTimer > 0){
         soundTimer--;
     }
 }
-
+/**
+ * @brief Returns soundTimer
+ */
 uint8_t Chip8::getSoundTimer(){
     return soundTimer;
 }
@@ -311,7 +315,9 @@ void Chip8::execute(Interface* interface){
     //returns full 4 hex digit instruction
     interpret(interface);
 }
-// assembly functions, xy = each 4bit hex val, nnn = addr/address, n = nibble/lowest 4 bit of instruction, kk = byte/8 bit
+/**
+ * @brief Clear display
+ */
 void Chip8::Op_00E0()
 { // CLR, Clear display
     for(int i = 0; i < 2048; i++){
@@ -319,25 +325,33 @@ void Chip8::Op_00E0()
     }
     incrementPC();
 }
-
+/**
+ * @brief Return from subroutine
+ */
 void Chip8::Op_00EE()
 { // RET, return from subroutine
     // set program counter to the top of stack , subtracts one from stack pointer
     PC = stack[--SP];
     incrementPC();
 }
-
+/**
+ * @brief Jump
+ */
 void Chip8::Op_1nnn(uint16_t nnn)
 { // [JP address] Jump, set program countert to nnn
     PC = nnn;
 }
-
+/**
+ * @brief Call  
+ */
 void Chip8::Op_2nnn(uint16_t nnn)
 { // [CALL address] Call, inmcremend stack pointer, puts current PC on top of stack, setting it to nnn
     stack[SP++] = PC;
     PC = nnn;
 }
-
+/**
+ * @brief Skip if equals
+ */
 void Chip8::Op_3xkk(uint8_t Vx, uint8_t kk)
 { // [SE Vx, byte], if reg Vx = kk, increment PC by 2
     if (registers[Vx] == kk)
@@ -346,7 +360,9 @@ void Chip8::Op_3xkk(uint8_t Vx, uint8_t kk)
     }
     incrementPC();
 }
-
+/**
+ * @brief Skip if not equal
+ */
 void Chip8::Op_4xkk(uint8_t Vx, uint8_t kk)
 { // [SNE Vx, byte] if reg Vx != kk, increment PC by 2
     if (registers[Vx] != kk)
@@ -355,7 +371,9 @@ void Chip8::Op_4xkk(uint8_t Vx, uint8_t kk)
     }
     incrementPC();
 }
-
+/**
+ * @brief Skip if registers equal
+ */
 void Chip8::Op_5xy0(uint8_t Vx, uint8_t Vy)
 { // [SE Vx, Vy] if reg Vx = reg Vy, increment PC by 2
     if (registers[Vx] == registers[Vy])
@@ -364,40 +382,54 @@ void Chip8::Op_5xy0(uint8_t Vx, uint8_t Vy)
     }
     incrementPC();
 }
-
+/**
+ * @brief Load into register
+ */
 void Chip8::Op_6xkk(uint8_t Vx, uint8_t kk)
 { // [LD Vx, byte] Puts value kk into register Vx
     registers[Vx] = kk;
     incrementPC();
 }
-
+/**
+ * @brief Add to register 
+ */
 void Chip8::Op_7xkk(uint8_t Vx, uint8_t kk)
 { // ADD [Vx, byte] Add kk to value in reg Vx, store result in Vx
     uint8_t result = registers[Vx] + kk;
     registers[Vx] = result;
     incrementPC();
 }
-
+/**
+ * @brief Copy register into register
+ */
 void Chip8::Op_8xy0(uint8_t Vx, uint8_t Vy){ // [LD Vx Vy] Stores value of reg Vy into Vx
     registers[Vx] = registers[Vy];
     incrementPC();
 }
-
+/**
+ * @brief Bitwise Or
+ */
 void Chip8::Op_8xy1(uint8_t Vx, uint8_t Vy){ // [Vx OR Vy] Bitwise OR on Vx and Vy, stores result in Vx 
     registers[Vx] = (registers[Vx] | registers[Vy]);
     incrementPC();
 }
-
+/**
+ * @brief Bitwise And
+ */
 void Chip8::Op_8xy2(uint8_t Vx, uint8_t Vy){ // [Vx AND Vy] Bitwise AND on Vx and Vy, stores result in Vx 
     registers[Vx] &= registers[Vy];
     incrementPC();
 }
-
+/**
+ * @brief Bitwise Xor
+ */
 void Chip8::Op_8xy3(uint8_t  Vx, uint8_t Vy){ // [Vx XOR Vy] Bitwise XOR on Vx and Vy, stores result in Vx 
     registers[Vx] = (registers[Vx] ^ registers[Vy]);
     incrementPC();
 }
-
+/**
+ * @brief accumulate from other register
+ */
 void Chip8::Op_8xy4(uint8_t Vx, uint8_t Vy){ // [ADD Vx, Vy] Vx = Vx+Vy, Vf = carry
     uint16_t result = (registers[Vx] + registers[Vy]);
     registers[Vx] = uint8_t(result);
@@ -409,6 +441,9 @@ void Chip8::Op_8xy4(uint8_t Vx, uint8_t Vy){ // [ADD Vx, Vy] Vx = Vx+Vy, Vf = ca
     
     incrementPC();
 }
+/**
+ * @brief decummulate from other register 
+ */
 void Chip8::Op_8xy5(uint8_t Vx, uint8_t Vy){ // [SUB Vx, Vy] Vx = Vx-Vy, Vf = 1 if Vx>Vy, otheriwse 0
     
     if(registers[Vx] >= registers[Vy]){
@@ -419,14 +454,18 @@ void Chip8::Op_8xy5(uint8_t Vx, uint8_t Vy){ // [SUB Vx, Vy] Vx = Vx-Vy, Vf = 1 
     registers[Vx] -= registers[Vy];
     incrementPC();
 }
-
+/**
+ * @brief rightshift 
+ */
 void Chip8::Op_8xy6(uint8_t Vx, uint8_t Vy){ // [SHR Vx {, Vy}] Vx = Vx SHR 1y, Vf = least significant bit
     
     registers[0xF] = registers[Vx] & 0x1;
     registers[Vx] >>= 1;
     incrementPC();
 }
-
+/**
+ * @brief Reverse Subctract
+ */
 void Chip8::Op_8xy7(uint8_t Vx, uint8_t Vy){ // [SUBN Vx, Vy] Vx = Vy - Vx, 
     registers[Vx] = (registers[Vy] - registers[Vx]);
     if(registers[Vy] >= registers[Vx]){
@@ -437,33 +476,46 @@ void Chip8::Op_8xy7(uint8_t Vx, uint8_t Vy){ // [SUBN Vx, Vy] Vx = Vy - Vx,
    
     incrementPC();
 }
-
+/**
+ * @brief leftshift 
+ */
 void Chip8::Op_8xyE(uint8_t Vx, uint8_t Vy){ // [SHL Vx {, Vy}] Vx = Vx SHL 1, 
     registers[0xF] = (registers[Vx] & 0x80) >> 7;
     registers[Vx] <<= 1;
     incrementPC();
 }
-
+/**
+ * @brief Skip if not equals 
+ */
 void Chip8::Op_9xy0(uint8_t Vx, uint8_t Vy){ // [SNE Vx, Vy], IF reg Vx != reg  Vy, increase PC by 2
     if(registers[Vx] != registers[Vy]){
         incrementPC();
     }
     incrementPC();
 }
-
+/**
+ * @brief Load I register
+ */
 void Chip8::Op_Annn(uint16_t nnn){ // [Ld I, addr], set register I to nnnn
     I_reg = nnn;
     incrementPC();
 }
-
+/**
+ * @brief Jump + register
+ */
 void Chip8::Op_Bnnn(uint16_t nnn){ // [JP V0, addr], jump to location nnn + Vo
     PC = registers[0] + nnn;
 }
-
+/**
+ * @brief Rand & byte
+ */
 void Chip8::Op_Cxkk(uint8_t Vx, uint8_t kk){ // [RND Vx, byte], generates random 8 bit number, AND'd with kk, set ot to Vx
     registers[Vx] = (rand() % 256) & kk;
     incrementPC();
 }
+/**
+ * @brief Draw sprite
+ */
 void Chip8::Op_Dxyn(uint8_t Vx, uint8_t Vy, uint8_t n){ 
     // [DRW Vx, Vy, nibble], Read n bytes from memory starting at I. 
     //Bytes are displayed as sprites at coordinates in reg Vx and Vy.
@@ -473,51 +525,55 @@ void Chip8::Op_Dxyn(uint8_t Vx, uint8_t Vy, uint8_t n){
     uint8_t y = registers[Vy] % 32;
     registers[0xF] = 0;
     bool override = false;
-    for(int r = 0; r < n; r++){ // rows, 0xFF 0x23 0x82 0x48 0x34 0x67 0x55 0x65 
-        uint8_t sprite_hex = memory[I_reg + r];  //0x65, 8 wide, 0110_0101
-        for(int b = 7; b >= 0; b--){ // bit
-            //if(((x + b) < 64) && ((y + r) < 32)){ // bounds check
-                int list_pos = (((y + r) * 64) + (x+(7-b))) % 2048;
-                uint32_t input_bit;
-                if((sprite_hex & (1 << b)) != 0){
-                    input_bit = 0xFFFFFFFF;
-                }else{
-                    input_bit = 0x00000000;
-                }
-                if((input_bit == 0xFFFFFFFF) && (screen[list_pos] == 0xFFFFFFFF)){
-                    override = true;
-                }
-                screen[list_pos] ^= input_bit;
-               
-            //}
+    for(int r = 0; r < n; r++){ 
+        uint8_t sprite_hex = memory[I_reg + r];  
+        for(int b = 7; b >= 0; b--){
+            int list_pos = (((y + r) * 64) + (x+(7-b))) % 2048;
+            uint32_t input_bit;
+            if((sprite_hex & (1 << b)) != 0){
+                input_bit = 0xFFFFFFFF;
+            }else{
+                input_bit = 0x00000000;
+            }
+            if((input_bit == 0xFFFFFFFF) && (screen[list_pos] == 0xFFFFFFFF)){
+                override = true;
+            }
+            screen[list_pos] ^= input_bit;
         }
     }
-    //debug_printScreen();
     if(override){
         registers[0x0F] = 1;
     }
     incrementPC();
 }
-
+/**
+ * @brief Skip if key pressed 
+ */
 void Chip8::Op_Ex9E(uint8_t Vx, Interface* interface){ // [SKP Vx] If key coresponding to value of Vx is currently pressed, PC increases by 2
     if(interface->keyboard[registers[Vx]]){
         incrementPC();
     }
     incrementPC();
 }
-
+/** Skip if key not pressed
+ * @brief 
+ */
 void Chip8::Op_ExA1(uint8_t Vx, Interface* interface){ // [SKNP Vx] If key coresponding to value of Vx is NOT currently pressed, PC increases by 2
     if(!(interface->keyboard[registers[Vx]])){
         incrementPC();
     }
     incrementPC();
 }
-
+/**
+ * @brief Load from delayTimer
+ */
 void Chip8::Op_Fx07(uint8_t Vx){ // [LD Vx, DT] Value of DT is placed into VX
     registers[Vx] = delayTimer;
     incrementPC();
 }
-
+/**
+ * @brief Wait for keyboard
+ */
 void Chip8::Op_Fx0A(uint8_t Vx, Interface* interface){ // [LD Vx, K] All execution stops until a key is pressed, then the value if stored in Vx
     int press_location;
     if(interface->anyKey()){
@@ -530,41 +586,55 @@ void Chip8::Op_Fx0A(uint8_t Vx, Interface* interface){ // [LD Vx, K] All executi
         incrementPC();
     }
 }
-
+/**
+ * @brief Load delayTimer
+ */
 void Chip8::Op_Fx15(uint8_t Vx){ // [LD Dt, Vx] Set delay timer = Vx
     delayTimer = registers[Vx];
     incrementPC();
 }
-
+/**
+ * @brief Load soundTimer
+ */
 void Chip8::Op_Fx18(uint8_t Vx){ // [LD St, Vx] Set sound timer = Vx
     soundTimer = registers[Vx];
     incrementPC();
 }
-
+/**
+ * @brief Accumulate register into I register
+ */
 void Chip8::Op_Fx1E(uint8_t Vx){ // [Add I, Vx] Values of I and Vx, results stored in I
     I_reg += registers[Vx];
     incrementPC();
 }
-
+/**
+ * @brief Load sprite into I register
+ */
 void Chip8::Op_Fx29(uint8_t Vx){ // [LD F, Vx] I = location of hex sprite for value of digit Vx 
     I_reg = 80 + (5 * int(registers[Vx]));
     incrementPC();
 }
-
+/**
+ * @brief Load separated digits into memory 
+ */
 void Chip8::Op_Fx33(uint8_t Vx){ // [LD B, Vx] I = decimal vlaue of Vx, places hundreds digit in memory at location in I, tens digit at I + 1, ones digit at I + 2 
     memory[I_reg] = registers[Vx] / 100;
     memory[I_reg + 1] = (registers[Vx] / 10) % 10;
     memory[I_reg + 2] = registers[Vx] % 10; 
     incrementPC();
 }
-
+/**
+ * @brief Load registers into memory
+ */
 void Chip8::Op_Fx55(uint8_t Vx){ // [LD [I], Vx] Copies values of registers V0 through Vx into memory starting at address I
     for(uint8_t i = 0; i <= Vx; i++){
         memory[I_reg + i] = registers[i];
     }
     incrementPC();
 }
-
+/**
+ * @brief Load memory into registers
+ */
 void Chip8::Op_Fx65(uint8_t Vx){ // [LD Vx, [I]] Puts values from memory starting at location In into registers V0 through Vx
     for(uint8_t i = 0; i <= Vx; i++){
         registers[i] = memory[I_reg + i];

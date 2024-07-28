@@ -7,15 +7,13 @@ class Interface{
     public:
         Interface();
         ~Interface();
-        SDL_AudioDeviceID device;
+
         void displayScreen(Chip8* chip8);
-        void audioCallback(void *userdata, uint8_t *stream, int len);
-        void callback(void *userdata, Uint8 *stream, int len);
+        void setVolume(short volume);
         void audioPlay();
         void audioStop();
         void squarewave(short *buffer);
         void debug_displayKeyboard();
-        void debug_printBuffer();
         void clearKeyboard();
         void updateKeyboard();
         bool anyKey();
@@ -34,16 +32,13 @@ class Interface{
         const int PITCH = OUTPUT_WIDTH * 4; //Width * bytes per pixel
         const int SCREEN_WIDTH = OUTPUT_WIDTH * SCALE;
         const int SCREEN_HEIGHT = OUTPUT_HEIGHT * SCALE;
+        
+        SDL_AudioDeviceID device;
+        
         const int SAMPLE_RATE = 44100;
-        const int FREQUENCY = 440;
-        //value between 0(mute) and 32767 (loud)
-        const short VOLUME = 32000;
-        int sample_index = 0;
-        const int PERIOD = SAMPLE_RATE / FREQUENCY; // 100
+        //Default value
+        short VOLUME = 15000;
+        const int PERIOD = SAMPLE_RATE / 440; // 100
         const int HALF_PERIOD = PERIOD / 2; // 50
-        // multiply by two for stereo
-        const int BYTES_PER_SAMPLE = sizeof(short) * 2;
-        const int BUFFER_SIZE = 735;
-        
-        
+        static void callback(void* beeper, uint8_t* stream, int length);
 };
