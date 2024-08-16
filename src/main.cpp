@@ -5,6 +5,7 @@
 #include <iostream>
 #include <chrono>
 
+
 const int SCREEN_WIDTH = 64;
 const int SCREEN_HEIGHT = 32;
 
